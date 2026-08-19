@@ -1,0 +1,2406 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Pizza Pink · Dashboard</title>
+<meta name="theme-color" content="#0B0F19"/>
+<link rel="icon" type="image/png" sizes="512x512" href="/app-icon-512.png"/>
+<link rel="icon" type="image/png" sizes="192x192" href="/app-icon-192.png"/>
+<link rel="apple-touch-icon" href="/apple-touch-icon.png"/>
+<link rel="manifest" href="/manifest.json"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+<meta name="apple-mobile-web-app-title" content="Pizza Pink"/>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/themes/dark.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --bg: #0B0F19;
+  --bg2: #10141F;
+  --card: rgba(255,255,255,0.045);
+  --border: rgba(255,255,255,0.09);
+  --border2: rgba(255,255,255,0.05);
+  --text: #F1F4FA;
+  --text2: #98A2B8;
+  --text3: #616B82;
+  --gold: #EC4899; /* Pink */
+  --emerald: #10B981;
+  --amber: #F59E0B;
+  --violet: #F472B6; /* Light Pink */
+  --bueno: #10B981;
+  --malo: #F43F5E;
+  --r: 16px;
+  --glass-blur: blur(20px);
+}
+html { scroll-behavior: smooth; }
+body {
+  background: radial-gradient(1100px 700px at 8% -10%, rgba(139,92,246,0.16), transparent 60%),
+              radial-gradient(900px 600px at 110% 10%, rgba(16,185,129,0.10), transparent 55%),
+              radial-gradient(1200px 800px at 50% 120%, rgba(245,197,66,0.06), transparent 60%),
+              var(--bg);
+  background-attachment: fixed;
+  color: var(--text);
+  font-family: 'Outfit', -apple-system, 'Segoe UI', sans-serif;
+  font-size: 14px;
+  min-height: 100vh;
+  padding-bottom: 40px;
+}
+::-webkit-scrollbar { width: 8px; height: 8px; }
+::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.12); border-radius: 8px; }
+::-webkit-scrollbar-track { background: transparent; }
+
+/* ── APP SHELL ── */
+
+.topbar {
+  position: sticky; top: 0; z-index: 40;
+  background: rgba(11,15,25,0.7); backdrop-filter: var(--glass-blur); -webkit-backdrop-filter: var(--glass-blur);
+  border-bottom: 1px solid var(--border);
+  padding: calc(10px + env(safe-area-inset-top, 0px)) 16px 0;
+}
+.topbar-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
+.brand { display: flex; align-items: center; }
+.brand img { height: 34px; width: auto; border-radius: 8px; display: block; }
+.refresh-btn { background: rgba(255,255,255,0.06); border: 1px solid var(--border); color: var(--text2); border-radius: 8px; padding: 6px 10px; font-size: 12px; cursor: pointer; transition: all 0.15s; }
+.refresh-btn:hover { background: rgba(255,255,255,0.12); color: var(--text); }
+.refresh-btn.spinning { animation: spin 0.6s linear; }
+@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+
+.tabs { display: flex; gap: 6px; overflow-x: auto; padding-bottom: 10px; scrollbar-width: none; }
+.tabs::-webkit-scrollbar { display: none; }
+.tab-btn { flex-shrink: 0; padding: 8px 14px; border-radius: 20px; border: 1px solid var(--border); background: transparent; color: var(--text2); font-size: 13px; font-weight: 600; font-family: inherit; cursor: pointer; white-space: nowrap; transition: all 0.15s; }
+.tab-btn.active { background: linear-gradient(135deg, rgba(245,197,66,0.2), rgba(139,92,246,0.14)); color: var(--gold); border-color: rgba(245,197,66,0.35); }
+.tab-btn:disabled { opacity: 0.35; cursor: not-allowed; }
+
+.content { padding: 20px 16px calc(40px + env(safe-area-inset-bottom, 0px)); max-width: 720px; margin: 0 auto; }
+
+/* AI Tab styling */
+.tab-btn.ai-tab-btn {
+  background: rgba(245,197,66,0.05);
+  border-color: rgba(245,197,66,0.2);
+}
+.tab-btn.ai-tab-btn.active {
+  background: linear-gradient(135deg, rgba(245,197,66,0.25), rgba(139, 92, 246, 0.18));
+  color: var(--gold);
+  border-color: rgba(245,197,66,0.5);
+  box-shadow: 0 0 10px rgba(245,197,66,0.15);
+}
+.ai-sparkle {
+  color: #F5C542;
+  margin-right: 4px;
+}
+
+/* Modal styling */
+.modal {
+  position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+  background: rgba(0,0,0,0.6); backdrop-filter: blur(4px);
+  display: flex; align-items: center; justify-content: center;
+  z-index: 100; padding: 16px;
+}
+.modal-content {
+  background: #10141F;
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  width: 100%; max-width: 650px;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+  display: flex; flex-direction: column;
+  max-height: 85vh;
+}
+.modal-header {
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: space-between;
+}
+.modal-header h3 { font-size: 16px; font-weight: 700; color: var(--gold); margin: 0; }
+.modal-close { font-size: 24px; cursor: pointer; color: var(--text3); transition: color 0.15s; line-height: 1; }
+.modal-close:hover { color: var(--text); }
+.modal-body { padding: 20px; overflow-y: auto; }
+.section { display: none; }
+.section.active { display: block; }
+
+/* ── CARDS ── */
+.card {
+  background: var(--card); backdrop-filter: var(--glass-blur); -webkit-backdrop-filter: var(--glass-blur);
+  border: 1px solid var(--border); border-radius: var(--r); padding: 18px;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+  margin-bottom: 16px;
+}
+.card-title { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.6px; color: var(--text3); margin-bottom: 10px; }
+
+.live-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: var(--bueno); margin-right: 7px; animation: pulse 1.6s infinite; box-shadow: 0 0 8px rgba(16,185,129,0.7); }
+@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.35} }
+
+/* ── comparativo genérico (dos valores lado a lado + tag con "vs X") ── */
+.comparativo-row { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 10px; }
+.comparativo-col { min-width: 0; }
+.comparativo-col.right { text-align: right; }
+.comparativo-col-label { font-size: 11px; color: var(--text3); margin-bottom: 4px; line-height: 1.4; }
+.comparativo-col-value { font-size: 22px; font-weight: 700; }
+.comparativo-arrow { color: var(--text3); font-size: 16px; }
+
+.comparativo-tag { display: inline-flex; align-items: center; gap: 6px; margin-top: 10px; padding: 5px 10px; border-radius: 8px; background: rgba(255,255,255,0.05); font-size: 12px; font-weight: 600; }
+.comparativo-tag.bueno { color: var(--bueno); }
+.comparativo-tag.malo { color: var(--malo); }
+.comparativo-tag.neutro { color: var(--text3); }
+
+.mini-cmp { font-size: 11px; font-weight: 600; margin-top: 4px; }
+.mini-cmp.bueno { color: var(--bueno); }
+.mini-cmp.malo { color: var(--malo); }
+.mini-cmp.neutro { color: var(--text3); }
+
+.tabla-dias { width: 100%; border-collapse: collapse; }
+.tabla-dias th { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text3); text-align: center; padding: 8px 6px; border-bottom: 1px solid var(--border); }
+.tabla-dias td { padding: 10px 6px; border-bottom: 1px solid var(--border2); font-size: 13px; text-align: center; white-space: nowrap; }
+.tabla-dias tr:last-child td { border-bottom: none; }
+.tabla-dias .dia-hoy { color: var(--gold); font-weight: 700; }
+
+.kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 12px; margin-bottom: 16px; }
+.kpi-card { background: var(--card); backdrop-filter: var(--glass-blur); -webkit-backdrop-filter: var(--glass-blur); border: 1px solid var(--border); border-radius: 14px; padding: 16px; }
+.kpi-label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text3); margin-bottom: 8px; }
+.kpi-value { font-size: 22px; font-weight: 700; }
+.kpi-sub { font-size: 11px; color: var(--text3); margin-top: 4px; }
+
+/* ── segmentación mesa vs cafetería ── */
+.seg-layout { display: flex; flex-direction: column; gap: 16px; }
+.seg-tabla { width: 100%; border-collapse: collapse; font-size: 13px; }
+.seg-tabla th { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text3); text-align: right; padding: 6px 4px; }
+.seg-tabla th:first-child, .seg-tabla td:first-child { text-align: left; padding-left: 0; }
+.seg-tabla td { padding: 8px 4px; text-align: right; border-top: 1px solid var(--border2); }
+.seg-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; margin-right: 6px; }
+.donut-wrap { position: relative; height: 160px; width: 100%; max-width: 220px; margin: 0 auto; }
+@media (min-width: 640px) {
+  .seg-layout { flex-direction: row; align-items: center; gap: 20px; }
+  .seg-layout .seg-tabla { flex: 1.3; }
+  .donut-wrap { flex: 1; margin: 0; }
+}
+
+/* ── selector de período moderno ── */
+.periodo-selector { display: flex; flex-direction: column; gap: 12px; }
+.chip-row { display: flex; gap: 6px; flex-wrap: wrap; }
+.chip { padding: 6px 12px; border-radius: 20px; border: 1px solid var(--border); background: var(--bg2); color: var(--text2); font-size: 12px; font-weight: 600; font-family: inherit; cursor: pointer; transition: all 0.15s; }
+.chip.active { background: rgba(245,197,66,0.15); color: var(--gold); border-color: rgba(245,197,66,0.35); }
+.select-chip { padding: 6px 10px; border-radius: 20px; border: 1px solid var(--border); background: var(--bg2); color: var(--text2); font-size: 12px; font-weight: 600; font-family: inherit; cursor: pointer; }
+.chip-checkbox { display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--text2); cursor: pointer; }
+.heatmap-scroll { overflow-x: auto; }
+.heatmap-table { border-collapse: collapse; }
+.heatmap-table th { font-size: 10px; color: var(--text3); font-weight: 600; padding: 3px 6px; text-align: center; }
+.heatmap-table td { width: 30px; height: 26px; text-align: center; font-size: 10px; color: var(--text2); border-radius: 4px; }
+.heatmap-table th:first-child, .heatmap-table td:first-child { text-align: left; font-size: 10px; color: var(--text3); padding-right: 8px; width: auto; }
+.periodo-nav { display: flex; align-items: center; gap: 10px; }
+.nav-btn { width: 28px; height: 28px; border-radius: 8px; border: 1px solid var(--border); background: var(--bg2); color: var(--text2); font-size: 14px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+.nav-btn:hover { background: rgba(255,255,255,0.1); color: var(--text); }
+.periodo-nav-label { font-size: 13px; font-weight: 600; color: var(--text); flex: 1; text-align: center; }
+.custom-range { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.custom-range input[type=date], .custom-range input[type=text] { background: var(--bg2); border: 1px solid var(--border); border-radius: 8px; padding: 8px 10px; color: var(--text); font-family: inherit; font-size: 12px; text-align: center; }
+.custom-range span { color: var(--text3); font-size: 12px; }
+
+.chart-wrap { position: relative; height: 220px; }
+
+.proyeccion-row { display: flex; justify-content: space-between; align-items: baseline; }
+.proyeccion-value { font-size: 26px; font-weight: 700; color: var(--gold); }
+.proyeccion-sub { font-size: 12px; color: var(--text3); }
+
+.empty-state { text-align: center; color: var(--text3); font-size: 13px; padding: 24px 0; }
+
+/* ── chat IA ── */
+.chat-mensajes { flex: 1; overflow-y: auto; padding: 18px; display: flex; flex-direction: column; gap: 12px; }
+.chat-msg { max-width: 85%; padding: 10px 14px; border-radius: 14px; font-size: 13px; line-height: 1.5; white-space: pre-wrap; }
+.chat-msg-bot { align-self: flex-start; background: rgba(255,255,255,0.06); border: 1px solid var(--border); border-bottom-left-radius: 4px; }
+.chat-msg-user { align-self: flex-end; background: linear-gradient(135deg, rgba(245,197,66,0.25), rgba(245,197,66,0.12)); color: var(--text); border-bottom-right-radius: 4px; }
+.chat-msg-bot.pensando { color: var(--text3); font-style: italic; }
+.chat-msg table { width: 100%; border-collapse: collapse; margin-top: 6px; font-size: 12px; }
+.chat-msg th, .chat-msg td { padding: 5px 8px; border-bottom: 1px solid var(--border2); text-align: left; }
+.chat-msg strong { color: var(--gold); }
+.chat-input-row { display: flex; gap: 8px; padding: 14px; border-top: 1px solid var(--border); }
+.chat-input { flex: 1; background: var(--bg2); border: 1px solid var(--border); border-radius: 10px; padding: 10px 14px; color: var(--text); font-family: inherit; font-size: 14px; outline: none; }
+.chat-input:focus { border-color: rgba(245,197,66,0.5); }
+.chat-send-btn { padding: 10px 18px; background: linear-gradient(135deg,#F5C542,#F0A500); color: #12100A; border: none; border-radius: 10px; font-size: 13px; font-weight: 700; cursor: pointer; }
+.chat-send-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+@media (min-width: 900px) {
+  .content { padding: 40px; max-width: 1200px; margin: 0 auto; }
+  .kpi-grid { grid-template-columns: repeat(3, 1fr); }
+}
+
+.clickable-row { cursor: pointer; -webkit-tap-highlight-color: rgba(255,255,255,0.1); }
+.clickable-row:active { background: rgba(255,255,255,0.05); }
+
+@media (max-width: 768px) {
+  .hoy-comparativo-container {
+    flex-direction: column;
+    gap: 15px !important;
+  }
+  .hoy-comparativo-col {
+    width: 100%;
+    border-left: none !important;
+    border-right: none !important;
+    border-bottom: 1px solid var(--border);
+    padding: 0 0 15px 0 !important;
+  }
+  .hoy-comparativo-col:last-child {
+    border-bottom: none;
+    padding-bottom: 0 !important;
+  }
+  
+  .responsive-table, .responsive-table tbody, .responsive-table tr, .responsive-table td {
+    display: block;
+    width: 100%;
+  }
+  .responsive-table thead {
+    display: none;
+  }
+  .responsive-table tr {
+    margin-bottom: 15px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 10px;
+    background: rgba(255,255,255,0.02);
+  }
+  .responsive-table td {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid var(--border2);
+    padding: 10px 4px !important;
+  }
+  .responsive-table td:last-child {
+    border-bottom: none;
+  }
+  .responsive-table td::before {
+    content: attr(data-label);
+    font-weight: 600;
+    color: var(--text3);
+    text-transform: uppercase;
+    font-size: 11px;
+    margin-right: 15px;
+  }
+}
+</style>
+</head>
+<body>
+
+<div id="app" class="visible">
+  <div class="topbar">
+    <div class="topbar-row">
+      <div class="brand"><img src="/logo-ideal.png" alt="Pizza Pink"/></div>
+      <button class="refresh-btn" id="btn-refresh" onclick="refrescarSeccionActual(true)">↻ Actualizar</button>
+    </div>
+    <div class="tabs" id="tabs">
+      <button class="tab-btn active" data-tab="hoy" onclick="mostrarTab('hoy')">Hoy</button>
+      <button class="tab-btn" data-tab="salon" onclick="mostrarTab('salon')">Salón</button>
+      <button class="tab-btn" data-tab="ventas" onclick="mostrarTab('ventas')">Ventas</button>
+      <button class="tab-btn" data-tab="cuentas" onclick="mostrarTab('cuentas')">Cuentas Corrientes</button>
+      <button class="tab-btn ai-tab-btn" data-tab="chat" onclick="mostrarTab('chat')"><span class="ai-sparkle">✨</span> Chat IA</button>
+      <button class="tab-btn" data-tab="ocupacion" onclick="mostrarTab('ocupacion')">Ocupación</button>
+      <button class="tab-btn" data-tab="productos" onclick="mostrarTab('productos')">Productos</button>
+      <button class="tab-btn" data-tab="personal" onclick="mostrarTab('personal')">Personal</button>
+      <button class="tab-btn" data-tab="descuentos" onclick="mostrarTab('descuentos')">Descuentos</button>
+      <button class="tab-btn" data-tab="compras" onclick="mostrarTab('compras')">Compras</button>
+    </div>
+  </div>
+
+  <div class="content">
+    <!-- ── HOY ── -->
+    <section class="section active" id="s-hoy">
+      <div class="card">
+        <div class="card-title"><span class="live-dot"></span>Facturación en vivo</div>
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px;">
+          <!-- HOY -->
+          <div class="card" style="min-height: 140px; display: flex; flex-direction: column; justify-content: center; padding: 24px;">
+            <div style="text-align:center;">
+              <div style="font-size: 15px; color: var(--text3); font-weight: 500; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px;">
+                HOY <span id="hoy-label-fecha" style="font-weight:normal; font-size: 13px;"></span>
+              </div>
+              <div id="hoy-total" style="font-size: 42px; font-weight: 800; letter-spacing: -1px; line-height: 1; margin-bottom: 12px; color: var(--text);">
+                $0
+              </div>
+              <div style="display:flex; justify-content:center; gap:16px; font-size: 15px; color: var(--text2);">
+                <span>👥 <span id="hoy-personas" style="font-weight:600; color:var(--text)">0</span> <span style="font-size:12px;color:var(--text3)">pers</span></span>
+                <span>🍽️ <span id="hoy-comensales" style="font-weight:600; color:var(--text)">0</span> <span style="font-size:12px;color:var(--text3)">comen</span></span>
+              </div>
+            </div>
+          </div>
+          <!-- SEMANA ANTERIOR -->
+          <div class="card" style="min-height: 140px; display: flex; flex-direction: column; justify-content: center; padding: 24px;">
+            <div style="text-align:center;">
+              <div style="font-size: 15px; color: var(--text3); font-weight: 500; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px;">
+                Semana anterior <span id="sp-label-fecha" style="font-weight:normal; font-size: 13px;"></span>
+              </div>
+              <div id="hoy-vs-value" style="font-size: 32px; font-weight: 700; letter-spacing: -1px; line-height: 1; margin-bottom: 8px; color: var(--text2);">
+                $0
+              </div>
+              <div id="badge-sp" style="margin-bottom: 12px;"></div>
+              <div style="display:flex; justify-content:center; gap:16px; font-size: 14px; color: var(--text3);">
+                <span style="display:flex; align-items:center; gap:4px;">👥 <span id="sp-personas" style="font-weight:600; color:var(--text2)">0</span> <div id="badge-sp-personas"></div></span>
+                <span style="display:flex; align-items:center; gap:4px;">🍽️ <span id="sp-comensales" style="font-weight:600; color:var(--text2)">0</span> <div id="badge-sp-comensales"></div></span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Progress Gauges Row (Compact) -->
+        <div class="card" style="margin-top: 20px; padding: 20px 8px; margin-bottom: 4px;">
+          <div style="display: flex; justify-content: space-around; flex-wrap: wrap; gap: 8px;">
+            <!-- Facturación Ring -->
+            <div style="display: flex; flex-direction: column; align-items: center; flex: 1; min-width: 95px;">
+              <div class="kpi-label" style="font-size: 11px; font-weight:700; margin-bottom: 8px; color: var(--text2);">Facturación</div>
+              <div style="position: relative; width: 90px; height: 90px; display: flex; align-items: center; justify-content: center; margin-bottom: 8px;">
+                <svg width="90" height="90" viewBox="0 0 90 90">
+                  <circle cx="45" cy="45" r="39" fill="none" stroke="rgba(255,255,255,0.04)" stroke-width="6"></circle>
+                  <circle cx="45" cy="45" r="39" fill="none" stroke="#F5C542" stroke-width="6" stroke-linecap="round" transform="rotate(-90 45 45)" stroke-dasharray="245.04" stroke-dashoffset="245.04" id="hoy-ring-facturacion" style="transition: stroke-dashoffset 0.4s ease;"></circle>
+                </svg>
+                <div style="position: absolute; display: flex; flex-direction: column; align-items: center; justify-content: center;">
+                  <span style="font-size: 9px; color: var(--text3); font-weight:700;" id="hoy-pct-facturacion">0%</span>
+                  <span style="font-size: 10px; font-weight: 800; color: var(--gold); letter-spacing: -0.5px;" id="hoy-val-facturacion">$0</span>
+                </div>
+              </div>
+              <div style="font-size: 11px; font-weight: 500; color: var(--text3); margin-top: 2px;" id="hoy-prom-facturacion">Proy: $0</div>
+              <div style="font-size: 11px; font-weight: 800; color: #fff; margin-top: 4px; padding: 4px 6px; background: rgba(245,197,66,0.15); border: 1px solid rgba(245,197,66,0.3); border-radius: 6px; text-align: center; width: 100%;" id="hoy-proj-facturacion">A cobrar:<br>$0</div>
+            </div>
+
+            <!-- Personas Ring -->
+            <div style="display: flex; flex-direction: column; align-items: center; flex: 1; min-width: 95px;">
+              <div class="kpi-label" style="font-size: 11px; font-weight:700; margin-bottom: 8px; color: var(--text2);">Personas</div>
+              <div style="position: relative; width: 90px; height: 90px; display: flex; align-items: center; justify-content: center; margin-bottom: 8px;">
+                <svg width="90" height="90" viewBox="0 0 90 90">
+                  <circle cx="45" cy="45" r="39" fill="none" stroke="rgba(255,255,255,0.04)" stroke-width="6"></circle>
+                  <circle cx="45" cy="45" r="39" fill="none" stroke="#8B5CF6" stroke-width="6" stroke-linecap="round" transform="rotate(-90 45 45)" stroke-dasharray="245.04" stroke-dashoffset="245.04" id="hoy-ring-cubiertos" style="transition: stroke-dashoffset 0.4s ease;"></circle>
+                </svg>
+                <div style="position: absolute; display: flex; flex-direction: column; align-items: center; justify-content: center;">
+                  <span style="font-size: 9px; color: var(--text3); font-weight:700;" id="hoy-pct-cubiertos">0%</span>
+                  <span style="font-size: 15px; font-weight: 800; color: #a78bfa;" id="hoy-val-cubiertos">0</span>
+                </div>
+              </div>
+              <div style="font-size: 11px; font-weight: 500; color: var(--text3); margin-top: 2px;" id="hoy-prom-cubiertos">Proy: 0</div>
+              <div style="font-size: 11px; font-weight: 800; color: #fff; margin-top: 4px; padding: 4px 6px; background: rgba(139,92,246,0.15); border: 1px solid rgba(139,92,246,0.3); border-radius: 6px; text-align: center; width: 100%;" id="hoy-proj-cubiertos">A cobrar:<br>0</div>
+            </div>
+
+            <!-- Operaciones Ring -->
+            <div style="display: flex; flex-direction: column; align-items: center; flex: 1; min-width: 95px;">
+              <div class="kpi-label" style="font-size: 11px; font-weight:700; margin-bottom: 8px; color: var(--text2);">Tickets</div>
+              <div style="position: relative; width: 90px; height: 90px; display: flex; align-items: center; justify-content: center; margin-bottom: 8px;">
+                <svg width="90" height="90" viewBox="0 0 90 90">
+                  <circle cx="45" cy="45" r="39" fill="none" stroke="rgba(255,255,255,0.04)" stroke-width="6"></circle>
+                  <circle cx="45" cy="45" r="39" fill="none" stroke="#10B981" stroke-width="6" stroke-linecap="round" transform="rotate(-90 45 45)" stroke-dasharray="245.04" stroke-dashoffset="245.04" id="hoy-ring-operaciones" style="transition: stroke-dashoffset 0.4s ease;"></circle>
+                </svg>
+                <div style="position: absolute; display: flex; flex-direction: column; align-items: center; justify-content: center;">
+                  <span style="font-size: 9px; color: var(--text3); font-weight:700;" id="hoy-pct-operaciones">0%</span>
+                  <span style="font-size: 15px; font-weight: 800; color: #34d399;" id="hoy-val-operaciones">0</span>
+                </div>
+              </div>
+              <div style="font-size: 11px; font-weight: 500; color: var(--text3); margin-top: 2px;" id="hoy-proj-operaciones">Proy: 0</div>
+              <div style="font-size: 11px; font-weight: 800; color: #fff; margin-top: 4px; padding: 4px 6px; background: rgba(16,185,129,0.15); border: 1px solid rgba(16,185,129,0.3); border-radius: 6px; text-align: center; width: 100%;" id="hoy-abiertas-operaciones">Abiertas:<br>0 mesas</div>
+            </div>
+          </div>
+        </div>
+
+      <div class="kpi-grid">
+        <div class="kpi-card">
+          <div class="kpi-label">Personas</div>
+          <div class="kpi-value" id="seg-personas">—</div>
+          <div class="kpi-sub">Total de clientes hoy</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-label">Comensales</div>
+          <div class="kpi-value" id="seg-comensales">—</div>
+          <div class="kpi-sub">Almorzaron o cenaron en mesa</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-label">Tickets</div>
+          <div class="kpi-value" id="hoy-comprobantes">—</div>
+          <div class="kpi-sub">Comprobantes emitidos</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-label">Ocupación de mesas</div>
+          <div class="kpi-value" id="hoy-ocupacion">—</div>
+          <div class="kpi-sub" id="hoy-ocupacion-sub">0 de 0 mesas ocupadas</div>
+        </div>
+        <div class="kpi-card" id="hoy-fp-card" style="grid-column: span 2;">
+          <div class="kpi-label" style="margin-bottom: 8px;">Formas de pago hoy</div>
+          <div class="formas-pago-container" id="hoy-formas-pago" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 10px 16px;">
+            <!-- Se rellena dinámicamente -->
+          </div>
+        </div>
+      </div>
+
+      
+      </div>
+
+      <div id="reporte-turno-hoy"></div>
+
+
+
+      <div class="card" style="grid-column: 1 / -1;">
+        <div class="card-title">Últimos 3 días (Cerrados)</div>
+        <div style="overflow-x:auto;">
+          <table class="tabla-dias">
+            <thead><tr><th>Día</th><th>Total</th><th>vs SP</th><th>Tickets</th><th>Promedio</th></tr></thead>
+            <tbody id="tabla-ultimos-dias"><tr><td colspan="4" class="empty-state">Cargando…</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+      <div style="text-align:center;color:var(--text3);font-size:11px" id="hoy-actualizado"></div>
+    </section>
+
+    <section class="section" id="s-salon">
+      <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; margin-bottom:15px; margin-top: 10px;">
+        <div class="card-title" style="margin: 0;">Plano de Mesas <span id="salon-date-label">en Vivo</span></div>
+        <div style="display:flex; gap:10px; align-items:center;">
+          <input type="text" id="fp-salon" class="input" style="width:140px; text-align:center;" placeholder="Seleccionar día..." />
+          <input type="hidden" id="salon-date" />
+          <button class="btn" onclick="cargarSalon()">Consultar</button>
+        </div>
+      </div>
+      <div class="card" style="padding: 0; overflow-x: auto; margin-bottom: 20px; width: 100%;">
+        <div id="salon-map-container" style="position: relative; width: 1200px; height: 950px; background: var(--bg0); border-radius: 8px;">
+          <!-- Map elements injected here -->
+        </div>
+      </div>
+      
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px;">
+        <div class="card">
+          <div class="card-title" id="title-abiertas">Detalle Mesas Ocupadas</div>
+          <div style="overflow-x:auto;">
+            <table class="data-table">
+              <thead>
+                <tr style="border-bottom: 2px solid var(--border);">
+                  <th style="padding: 12px 16px; font-weight:800; color:var(--text2);">Mesa</th>
+                  <th style="padding: 12px 16px; font-weight:800; color:var(--text2);">Apertura</th>
+                  <th class="right" style="padding: 12px 16px; font-weight:800; color:var(--text2);">Consumo</th>
+                </tr>
+              </thead>
+              <tbody id="salon-tabla-abiertas">
+                <tr><td colspan="3" style="text-align:center;">Cargando...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="card" id="card-cerradas">
+          <div class="card-title">Mesas Cerradas Hoy (Ranking)</div>
+          <div style="overflow-x:auto; max-height: 400px; overflow-y: auto;">
+            <table class="data-table">
+              <thead>
+                <tr style="border-bottom: 2px solid var(--border);">
+                  <th style="padding: 12px 16px; font-weight:800; color:var(--text2);">Mesa</th>
+                  <th class="right" style="padding: 12px 16px; font-weight:800; color:var(--text2);">Facturado</th>
+                </tr>
+              </thead>
+              <tbody id="salon-tabla-cerradas">
+                <tr><td colspan="2" style="text-align:center;">Cargando...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── VENTAS ── -->
+    <section class="section" id="s-ventas">
+      <div class="card periodo-selector">
+        <div class="card-title">Granularidad</div>
+        <div class="chip-row" id="chip-granularidad">
+          <button class="chip" data-gran="dia">Día</button>
+          <button class="chip active" data-gran="semana">Semana</button>
+          <button class="chip" data-gran="mes">Mes</button>
+          <button class="chip" data-gran="anio">Año</button>
+        </div>
+        <div class="periodo-nav">
+          <button class="nav-btn" onclick="navegarPeriodo(-1)">‹</button>
+          <div class="periodo-nav-label" id="periodo-nav-label">—</div>
+          <button class="nav-btn" onclick="navegarPeriodo(1)">›</button>
+        </div>
+        <div class="card-title" style="margin-top:4px">Comparar contra</div>
+        <div class="chip-row" id="chip-comparacion">
+          <button class="chip active" data-cmp="anterior">Período anterior</button>
+          <button class="chip" data-cmp="anio_pasado">Mismo período año pasado</button>
+          <button class="chip" data-cmp="custom">Personalizado</button>
+        </div>
+        <div class="custom-range" id="custom-range" style="display:none">
+          <input type="text" id="fp-custom1" placeholder="Período principal..." style="width: 210px; text-align: center;">
+          <input type="hidden" id="custom-desde"><input type="hidden" id="custom-hasta">
+          <span>vs</span>
+          <input type="text" id="fp-custom2" placeholder="Período a comparar..." style="width: 210px; text-align: center;">
+          <input type="hidden" id="custom-desde2"><input type="hidden" id="custom-hasta2">
+          <button class="chip" onclick="aplicarCustom()">Aplicar</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">Facturación total</div>
+        <div class="comparativo-row">
+          <div class="comparativo-col">
+            <div class="comparativo-col-label" id="vt-label-actual">—</div>
+            <div class="comparativo-col-value" id="ventas-total">—</div>
+          </div>
+          <div class="comparativo-arrow">→</div>
+          <div class="comparativo-col right">
+            <div class="comparativo-col-label" id="vt-label-comparado">—</div>
+            <div class="comparativo-col-value" id="ventas-total-comparado">—</div>
+          </div>
+        </div>
+        <div id="ventas-total-cmp"></div>
+      </div>
+
+      <div class="kpi-grid">
+        <div class="kpi-card">
+          <div class="kpi-label">Tickets</div>
+          <div class="kpi-value" id="ventas-comprobantes">—</div>
+          <div id="ventas-comprobantes-cmp"></div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-label">Ticket promedio</div>
+          <div class="kpi-value" id="ventas-promedio">—</div>
+          <div id="ventas-promedio-cmp"></div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-label">Ocupación de mesas</div>
+          <div class="kpi-value" id="ventas-ocupacion">—</div>
+          <div class="kpi-sub" id="ventas-ocupacion-sub">0 de 0 mesas promedio</div>
+        </div>
+        <div class="kpi-card" id="ventas-fp-card" style="grid-column: span 2;">
+          <div class="kpi-label" style="margin-bottom: 8px;">Formas de pago del período</div>
+          <div class="formas-pago-container" id="ventas-formas-pago" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 10px 16px;">
+            <!-- Se rellena dinámicamente -->
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">Evolución diaria (barras) y tendencia (línea, promedio móvil 3 días)</div>
+        <div class="chart-wrap"><canvas id="chart-ventas"></canvas></div>
+      </div>
+
+
+
+      <div class="card">
+        <div class="card-title">Proyección del mes en curso</div>
+        <div class="proyeccion-row">
+          <div>
+            <div class="proyeccion-value" id="proyeccion-value">—</div>
+            <div class="proyeccion-sub" id="proyeccion-sub">—</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card-title" style="margin: 4px 2px;">Turno Mañana vs Turno Tarde/Noche — período seleccionado arriba</div>
+      <div id="reporte-turno-ventas"></div>
+    </section>
+
+    <!-- ── CUENTAS CORRIENTES ── -->
+    <section class="section" id="s-cuentas">
+      <div class="card">
+        <div class="card-title">Total Saldo en la Calle</div>
+        <div style="font-size: 32px; font-weight: 800; color: var(--gold); text-align: center; margin: 12px 0;" id="cuentas-total-calle">—</div>
+        <p style="text-align: center; color: var(--text3); font-size: 11px;">Suma de saldos deudores activos en el salón</p>
+      </div>
+
+      <div class="card-title" style="margin: 16px 2px 8px;">Clientes Principales</div>
+      <div class="kpi-grid" id="grid-cuentas-principales" style="grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; margin-bottom: 20px;">
+        <!-- Se rellena dinámicamente -->
+      </div>
+
+      <div class="card">
+        <div class="card-title">Resto de Cuentas Corrientes</div>
+        <div style="margin-bottom: 12px;">
+          <input type="text" id="busqueda-cuentas" placeholder="Buscar cliente por nombre o código..." oninput="filtrarRestoCuentas()" class="login-input" style="max-width: 100%; margin-bottom: 0;">
+        </div>
+        <div style="overflow-x:auto;">
+          <table class="tabla-dias">
+            <thead>
+              <tr>
+                <th>Código</th>
+                <th>Cliente</th>
+                <th>Consumos</th>
+                <th>Pagos</th>
+                <th>Saldo</th>
+              </tr>
+            </thead>
+            <tbody id="tabla-cuentas-resto">
+              <tr><td colspan="5" class="empty-state">Cargando…</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+
+
+    <!-- ── PRODUCTOS ── -->
+    <section class="section" id="s-productos">
+      <div class="card periodo-selector">
+        <div class="card-title">Período</div>
+        <div class="chip-row" id="prod-periodo-chips">
+          <button class="chip active" data-p="hoy">Hoy</button>
+          <button class="chip" data-p="semana">Esta semana</button>
+          <button class="chip" data-p="mes">Este mes</button>
+          <button class="chip" data-p="custom">Personalizado</button>
+        </div>
+        <div class="custom-range" id="prod-custom-range" style="display:none">
+          <select id="prod-select-mes" class="select-chip" onchange="seleccionarMesEnTab('productos')">
+            <option value="">Mes...</option>
+            <option value="01">Enero</option>
+            <option value="02">Febrero</option>
+            <option value="03">Marzo</option>
+            <option value="04">Abril</option>
+            <option value="05">Mayo</option>
+            <option value="06">Junio</option>
+            <option value="07">Julio</option>
+            <option value="08">Agosto</option>
+            <option value="09">Septiembre</option>
+            <option value="10">Octubre</option>
+            <option value="11">Noviembre</option>
+            <option value="12">Diciembre</option>
+          </select>
+          <input type="text" id="fp-prod" placeholder="Seleccionar fechas..." style="width: 210px; text-align: center;">
+          <input type="hidden" id="prod-desde"><input type="hidden" id="prod-hasta">
+          <button class="chip" onclick="aplicarPeriodoCustom('productos')">Aplicar</button>
+        </div>
+        <div class="chip-row">
+          <select id="prod-rubro" class="select-chip" onchange="cargarProductos()"><option value="">Todos los rubros</option></select>
+          <select id="prod-orden" class="select-chip" onchange="cargarProductos()">
+            <option value="desc">Más vendidos</option>
+            <option value="asc">Menos vendidos</option>
+          </select>
+          <select id="prod-limit" class="select-chip" onchange="cargarProductos()">
+            <option value="10">Top 10</option>
+            <option value="15" selected>Top 15</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title" id="prod-chart-title">Ranking por facturación</div>
+        <div class="chart-wrap"><canvas id="chart-productos"></canvas></div>
+      </div>
+
+      <div class="card">
+        <table class="tabla-dias">
+          <thead><tr><th>#</th><th>Producto</th><th>Unidades</th><th>Importe</th><th>% del total</th></tr></thead>
+          <tbody id="tabla-productos"><tr><td colspan="5" class="empty-state">Cargando…</td></tr></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- ── OCUPACIÓN ── -->
+    <section class="section" id="s-ocupacion">
+      <div class="card periodo-selector">
+        <div class="card-title">Período</div>
+        <div class="chip-row" id="ocup-periodo-chips">
+          <button class="chip" data-p="semana">Esta semana</button>
+          <button class="chip active" data-p="mes">Este mes</button>
+          <button class="chip" data-p="custom">Personalizado</button>
+        </div>
+        <div class="custom-range" id="ocup-custom-range" style="display:none">
+          <select id="ocup-select-mes" class="select-chip" onchange="seleccionarMesEnTab('ocupacion')">
+            <option value="">Mes...</option>
+            <option value="01">Enero</option>
+            <option value="02">Febrero</option>
+            <option value="03">Marzo</option>
+            <option value="04">Abril</option>
+            <option value="05">Mayo</option>
+            <option value="06">Junio</option>
+            <option value="07">Julio</option>
+            <option value="08">Agosto</option>
+            <option value="09">Septiembre</option>
+            <option value="10">Octubre</option>
+            <option value="11">Noviembre</option>
+            <option value="12">Diciembre</option>
+          </select>
+          <input type="text" id="fp-ocup" placeholder="Seleccionar fechas..." style="width: 210px; text-align: center;">
+          <input type="hidden" id="ocup-desde"><input type="hidden" id="ocup-hasta">
+          <button class="chip" onclick="aplicarPeriodoCustom('ocupacion')">Aplicar</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">Horarios pico (cantidad de comandas)</div>
+        <div class="heatmap-scroll"><div id="heatmap-grid"></div></div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">Mesas por día</div>
+        <table class="tabla-dias">
+          <thead><tr><th>Día</th><th>Mesas usadas</th><th>Tickets</th><th>Duración prom.</th></tr></thead>
+          <tbody id="tabla-mesas"><tr><td colspan="4" class="empty-state">Cargando…</td></tr></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- ── PERSONAL ── -->
+    <section class="section" id="s-personal">
+      <div class="card periodo-selector">
+        <div class="card-title">Período</div>
+        <div class="chip-row" id="pers-periodo-chips">
+          <button class="chip" data-p="hoy">Hoy</button>
+          <button class="chip active" data-p="semana">Esta semana</button>
+          <button class="chip" data-p="mes">Este mes</button>
+          <button class="chip" data-p="custom">Personalizado</button>
+        </div>
+        <div class="custom-range" id="pers-custom-range" style="display:none">
+          <select id="pers-select-mes" class="select-chip" onchange="seleccionarMesEnTab('personal')">
+            <option value="">Mes...</option>
+            <option value="01">Enero</option>
+            <option value="02">Febrero</option>
+            <option value="03">Marzo</option>
+            <option value="04">Abril</option>
+            <option value="05">Mayo</option>
+            <option value="06">Junio</option>
+            <option value="07">Julio</option>
+            <option value="08">Agosto</option>
+            <option value="09">Septiembre</option>
+            <option value="10">Octubre</option>
+            <option value="11">Noviembre</option>
+            <option value="12">Diciembre</option>
+          </select>
+          <input type="text" id="fp-pers" placeholder="Seleccionar fechas..." style="width: 210px; text-align: center;">
+          <input type="hidden" id="pers-desde"><input type="hidden" id="pers-hasta">
+          <button class="chip" onclick="aplicarPeriodoCustom('personal')">Aplicar</button>
+        </div>
+        <label class="chip-checkbox"><input type="checkbox" id="pers-comparar" onchange="cargarPersonal()"> Comparar con período anterior</label>
+      </div>
+
+      <div class="card">
+        <table class="tabla-dias">
+          <thead><tr><th>#</th><th>Empleado</th><th>Facturación</th><th>Tickets</th></tr></thead>
+          <tbody id="tabla-personal"><tr><td colspan="4" class="empty-state">Cargando…</td></tr></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- ── DESCUENTOS ── -->
+    <section class="section" id="s-descuentos">
+      <div class="card periodo-selector">
+        <div class="card-title">Período</div>
+        <div class="chip-row" id="desc-periodo-chips">
+          <button class="chip" data-p="hoy">Hoy</button>
+          <button class="chip active" data-p="semana">Esta semana</button>
+          <button class="chip" data-p="mes">Este mes</button>
+          <button class="chip" data-p="custom">Personalizado</button>
+        </div>
+        <div class="custom-range" id="desc-custom-range" style="display:none">
+          <select id="desc-select-mes" class="select-chip" onchange="seleccionarMesEnTab('descuentos')">
+            <option value="">Mes...</option>
+            <option value="01">Enero</option>
+            <option value="02">Febrero</option>
+            <option value="03">Marzo</option>
+            <option value="04">Abril</option>
+            <option value="05">Mayo</option>
+            <option value="06">Junio</option>
+            <option value="07">Julio</option>
+            <option value="08">Agosto</option>
+            <option value="09">Septiembre</option>
+            <option value="10">Octubre</option>
+            <option value="11">Noviembre</option>
+            <option value="12">Diciembre</option>
+          </select>
+          <input type="text" id="fp-desc" placeholder="Seleccionar fechas..." style="width: 210px; text-align: center;">
+          <input type="hidden" id="desc-desde"><input type="hidden" id="desc-hasta">
+          <button class="chip" onclick="aplicarPeriodoCustom('descuentos')">Aplicar</button>
+        </div>
+        <label class="chip-checkbox"><input type="checkbox" id="desc-comparar" onchange="cargarDescuentos()"> Comparar con período anterior</label>
+      </div>
+
+      <div class="kpi-grid">
+        <div class="kpi-card">
+          <div class="kpi-label">Total descontado</div>
+          <div class="kpi-value" id="desc-total">—</div>
+          <div id="desc-total-cmp"></div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-label">% sobre ventas</div>
+          <div class="kpi-value" id="desc-pct">—</div>
+          <div id="desc-pct-cmp"></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">Por motivo</div>
+        <table class="tabla-dias">
+          <thead><tr><th>Motivo</th><th>Importe</th><th>Tickets</th></tr></thead>
+          <tbody id="tabla-descuentos"><tr><td colspan="3" class="empty-state">Cargando…</td></tr></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- ── COMPRAS ── -->
+    <section class="section" id="s-compras">
+      <div class="card periodo-selector">
+        <div class="card-title">Período (ranking de proveedores)</div>
+        <div class="chip-row" id="compras-periodo-chips">
+          <button class="chip" data-p="semana">Esta semana</button>
+          <button class="chip active" data-p="mes">Este mes</button>
+          <button class="chip" data-p="custom">Personalizado</button>
+        </div>
+        <div class="custom-range" id="compras-custom-range" style="display:none">
+          <select id="compras-select-mes" class="select-chip" onchange="seleccionarMesEnTab('compras')">
+            <option value="">Mes...</option>
+            <option value="01">Enero</option>
+            <option value="02">Febrero</option>
+            <option value="03">Marzo</option>
+            <option value="04">Abril</option>
+            <option value="05">Mayo</option>
+            <option value="06">Junio</option>
+            <option value="07">Julio</option>
+            <option value="08">Agosto</option>
+            <option value="09">Septiembre</option>
+            <option value="10">Octubre</option>
+            <option value="11">Noviembre</option>
+            <option value="12">Diciembre</option>
+          </select>
+          <input type="text" id="fp-compras" placeholder="Seleccionar fechas..." style="width: 210px; text-align: center;">
+          <input type="hidden" id="compras-desde"><input type="hidden" id="compras-hasta">
+          <button class="chip" onclick="aplicarPeriodoCustom('compras')">Aplicar</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">Ranking de proveedores</div>
+        <table class="tabla-dias">
+          <thead><tr><th>Proveedor</th><th>Total comprado</th></tr></thead>
+          <tbody id="tabla-proveedores"><tr><td colspan="2" class="empty-state">Cargando…</td></tr></tbody>
+        </table>
+      </div>
+
+      <div class="card">
+        <div class="card-title">Deudas pendientes (saldo corriente)</div>
+        <table class="tabla-dias">
+          <thead><tr><th>Proveedor</th><th>Comprado</th><th>Pagado</th><th>Deuda</th></tr></thead>
+          <tbody id="tabla-deudas"><tr><td colspan="4" class="empty-state">Cargando…</td></tr></tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="section" id="s-chat">
+      <div class="card" style="padding:0; display:flex; flex-direction:column; height:min(70vh, 640px);">
+        <div style="display:flex; justify-content:space-between; align-items:center; padding:12px 18px; border-bottom:1px solid var(--border);">
+          <span style="font-weight:700; color:var(--text1); font-size:14px;">Asistente Inteligente</span>
+          <button onclick="limpiarHistorialChat()" style="background:none; border:none; color:var(--text3); font-size:11px; cursor:pointer; font-weight:600; text-decoration:underline;">Limpiar historial</button>
+        </div>
+        <div class="chat-mensajes" id="chat-mensajes">
+          <div class="chat-msg chat-msg-bot">
+            Preguntame lo que quieras sobre el negocio — ventas, productos, mesas, empleados, proveedores, lo que sea. Reviso la base en el momento para responderte.
+          </div>
+        </div>
+        <div class="chat-input-row">
+          <input type="text" id="chat-input" class="chat-input" placeholder="Ej: ¿cuánto vendimos ayer?" autocomplete="off" />
+          <button class="chat-send-btn" id="chat-send-btn" onclick="enviarMensajeChat()">Enviar</button>
+        </div>
+      </div>
+    </section>
+  </div>
+</div>
+
+<!-- Modal Historial de Cuenta Corriente -->
+<div id="modal-historial" class="modal" style="display:none">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h3 id="modal-cliente-nombre">Historial de Cuenta Corriente</h3>
+      <span class="modal-close" onclick="cerrarModalHistorial()">&times;</span>
+    </div>
+    <div class="modal-body">
+      <div class="kpi-grid" style="grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 20px; display: grid;">
+        <div class="kpi-card" style="padding: 10px;">
+          <div class="kpi-label" style="font-size:10px;">Consumos</div>
+          <div class="kpi-value" id="modal-kpi-consumos" style="font-size:16px; margin: 4px 0;">—</div>
+        </div>
+        <div class="kpi-card" style="padding: 10px;">
+          <div class="kpi-label" style="font-size:10px;">Pagos</div>
+          <div class="kpi-value" id="modal-kpi-pagos" style="font-size:16px; margin: 4px 0;">—</div>
+        </div>
+        <div class="kpi-card" style="padding: 10px; border-color: rgba(245,197,66,0.35);">
+          <div class="kpi-label" style="font-size:10px; color:var(--gold);">Saldo</div>
+          <div class="kpi-value" id="modal-kpi-saldo" style="font-size:16px; color:var(--gold); margin: 4px 0;">—</div>
+        </div>
+      </div>
+      <div style="overflow-x:auto;">
+        <table class="tabla-dias">
+          <thead>
+            <tr>
+              <th>Fecha</th>
+              <th>Movimiento</th>
+              <th>Documento</th>
+              <th>Detalle</th>
+              <th style="text-align:right">Importe</th>
+            </tr>
+          </thead>
+          <tbody id="tabla-modal-historial">
+            <tr><td colspan="5" class="empty-state">Cargando…</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const API_BASE = "https://bar-ideal-dashboard-production.up.railway.app";
+let HOY_ARG = null; // fecha 'YYYY-MM-DD' de hoy en Argentina, resuelta contra el backend
+let chartVentas = null;
+let donutSegmentacion = null;
+let autoRefreshTimer = null;
+
+const MESES = ["enero","febrero","marzo","abril","mayo","junio","julio","agosto","septiembre","octubre","noviembre","diciembre"];
+
+function fmtMoneda(n) {
+  return "$\u00A0" + Math.round(n).toLocaleString("es-AR");
+}
+function fmtPct(n) {
+  if (n === null || n === undefined) return "";
+  return (n >= 0 ? "+" : "") + n.toFixed(1) + "%";
+}
+// Formato argentino corto DD-MM (para rangos y ejes de gráfico).
+function fmtCorta(dateStr) {
+  const [, m, d] = dateStr.split("-");
+  return `${d}-${m}`;
+}
+// Formato argentino DD-MM con inicial del día de la semana (para el gráfico de ventas).
+function fmtCortaConDia(dateStr) {
+  const [y, m, d] = dateStr.split("-").map(Number);
+  const dt = new Date(Date.UTC(y, m - 1, d));
+  const dow = dt.getUTCDay();
+  const iniciales = ["D", "L", "M", "M", "J", "V", "S"];
+  return `${iniciales[dow]} ${String(d).padStart(2, '0')}-${String(m).padStart(2, '0')}`;
+}
+// Formato argentino completo DD-MM-AA (año de 2 dígitos).
+function fmtFechaArg(dateStr) {
+  const [y, m, d] = dateStr.split("-");
+  return `${d}\u2011${m}\u2011${y.slice(2)}`;
+}
+
+let isForceRefresh = false;
+
+async function api(path, opts = {}) {
+  const url = new URL(API_BASE + path);
+  if (isForceRefresh) url.searchParams.set("refresh", "1");
+  
+  let slowWarning = setTimeout(() => {
+    toast("El servidor estaba dormido. Despertando... (puede demorar 1-2 min)");
+  }, 4000);
+
+  try {
+    const res = await fetch(url.toString(), opts);
+    clearTimeout(slowWarning);
+    if (!res.ok) throw new Error((await res.json().catch(() => ({}))).error || "Error de red");
+    return await res.json();
+  } catch (e) {
+    clearTimeout(slowWarning);
+    throw e;
+  }
+}
+
+// Tag "▲ +8.7% vs <label>" — el % siempre lleva escrito contra qué se compara, o nada si es vacío.
+function renderComparativoTag(el, cmp, labelComparado, small = false, noMargin = false) {
+  if (!cmp || cmp.sentido === undefined) { el.innerHTML = ""; return; }
+  const flecha = cmp.variacion_importe > 0 ? "▲" : cmp.variacion_importe < 0 ? "▼" : "—";
+  const marginStyle = noMargin ? 'margin-top: 0;' : '';
+  const fontStyle = small ? 'font-size: 11px; padding: 3px 6px;' : '';
+  const vsText = labelComparado ? ` vs ${labelComparado}` : "";
+  el.innerHTML = `<span class="comparativo-tag ${cmp.sentido}" style="${marginStyle} ${fontStyle}">${flecha} ${fmtPct(cmp.variacion_pct)}${vsText}</span>`;
+}
+function renderMiniCmp(el, cmp, labelComparado) {
+  if (!cmp || cmp.sentido === undefined) { el.innerHTML = ""; return; }
+  const flecha = cmp.variacion_importe > 0 ? "▲" : cmp.variacion_importe < 0 ? "▼" : "—";
+  el.innerHTML = `<div class="mini-cmp ${cmp.sentido}">${flecha} ${fmtPct(cmp.variacion_pct)} vs ${labelComparado}</div>`;
+}
+
+// ── HOY ──
+function renderSegmentacion(seg) {
+  document.getElementById("seg-personas").textContent = seg.personas.toLocaleString("es-AR");
+  document.getElementById("seg-comensales").textContent = 0.toLocaleString("es-AR");
+
+  const tbody = document.getElementById("seg-tabla-body");
+  tbody.innerHTML = `
+    <tr>
+      <td><span class="seg-dot" style="background:#F5C542"></span>Almuerzo-Cena</td>
+      <td>${0.toLocaleString("es-AR")}</td>
+      <td>${fmtMoneda(0)}</td>
+      <td>${fmtMoneda(seg.promedio_mesa)}</td>
+    </tr>
+    <tr>
+      <td><span class="seg-dot" style="background:#8B5CF6"></span>Cafetería y otros</td>
+      <td>${0.toLocaleString("es-AR")}</td>
+      <td>${fmtMoneda(0)}</td>
+      <td>${fmtMoneda(0)}</td>
+    </tr>
+  `;
+
+  const ctx = document.getElementById("donut-segmentacion").getContext("2d");
+  if (donutSegmentacion) donutSegmentacion.destroy();
+  donutSegmentacion = new Chart(ctx, {
+    type: "doughnut",
+    data: {
+      labels: ["Almuerzo-Cena", "Cafetería y otros"],
+      datasets: [{ data: [0, 0], backgroundColor: ["#F5C542", "#8B5CF6"], borderWidth: 0 }],
+    },
+    options: { plugins: { legend: { display: false } }, cutout: "68%", responsive: true, maintainAspectRatio: false },
+  });
+}
+
+// Reporte cruzado Turno Mañana / Turno Tarde-Noche × Mesa vs Cafetería — mismo criterio que el bot de Telegram.
+function filaReporteTurno(label, value) {
+  return `<div style="display:flex;justify-content:space-between;padding:4px 0;font-size:13px;">
+    <span style="color:var(--text3)">${label}</span><span style="font-weight:600">${value}</span>
+  </div>`;
+}
+
+function segmentoTurnoHtml(titulo, seg, labelMesa) {
+  return `
+    <div class="card">
+      <div class="card-title">${titulo}</div>
+      ${filaReporteTurno("Total personas", Number(seg.personas).toLocaleString("es-AR"))}
+      ${filaReporteTurno(`Comensales ${labelMesa}`, Number(0).toLocaleString("es-AR"))}
+      ${filaReporteTurno(`Facturación ${labelMesa}`, fmtMoneda(0))}
+      ${filaReporteTurno(`Promedio ${labelMesa}`, fmtMoneda(seg.promedio_mesa))}
+      ${filaReporteTurno("Personas extras", Number(0).toLocaleString("es-AR"))}
+      ${filaReporteTurno("Facturación extra", fmtMoneda(0))}
+      ${filaReporteTurno("Promedio extra", fmtMoneda(0))}
+      <div style="border-top:1px solid var(--border);margin-top:6px;padding-top:6px;">
+        ${filaReporteTurno("Facturación total", fmtMoneda(seg.facturacion_total))}
+      </div>
+    </div>
+  `;
+}
+
+function renderReporteTurno(containerId, data) {
+  document.getElementById(containerId).innerHTML =
+    segmentoTurnoHtml("Turno Mañana", data.tm, "almuerzo") +
+    segmentoTurnoHtml("Turno Tarde/Noche", data.tt, "cena") +
+    segmentoTurnoHtml("Totales del período", data.total, "almuerzo + cena");
+}
+
+async function cargarHoy() {
+  const [hoyData, dias] = await Promise.all([
+    api("/api/envivo/hoy"),
+    api("/api/envivo/ultimos-dias"),
+  ]);
+
+  HOY_ARG = hoyData.hoy.fecha;
+
+  document.getElementById("hoy-label-fecha").textContent = `(${fmtCorta(hoyData.hoy.fecha)})`;
+  document.getElementById("sp-label-fecha").textContent = `(${fmtCorta(hoyData.semana_pasada.fecha)})`;
+  
+  document.getElementById("hoy-total").textContent = fmtMoneda(hoyData.hoy.total);
+  document.getElementById("hoy-personas").textContent = hoyData.hoy.cubiertos;
+  document.getElementById("hoy-comensales").textContent = hoyData.hoy.comensales || 0;
+
+  document.getElementById("hoy-vs-value").textContent = fmtMoneda(hoyData.semana_pasada.total);
+  document.getElementById("sp-personas").textContent = hoyData.semana_pasada.cubiertos;
+  document.getElementById("sp-comensales").textContent = hoyData.semana_pasada.comensales || 0;
+  
+  renderComparativoTag(document.getElementById("badge-sp"), calculateComparativo(hoyData.hoy.total, hoyData.semana_pasada.total), "", true, true);
+  renderComparativoTag(document.getElementById("badge-sp-personas"), calculateComparativo(hoyData.hoy.cubiertos, hoyData.semana_pasada.cubiertos), "", true, true);
+  renderComparativoTag(document.getElementById("badge-sp-comensales"), calculateComparativo(hoyData.hoy.comensales || 0, hoyData.semana_pasada.comensales || 0), "", true, true);
+  
+  document.getElementById("hoy-comprobantes").textContent = hoyData.hoy.comprobantes;
+  document.getElementById("hoy-actualizado").textContent = "Actualizado " + hoyData.actualizado;
+
+  // Ocupación de mesas en vivo
+  const ocup = hoyData.hoy.ocupacion || { pct: 0, abiertas: 0, totales: 73 };
+  document.getElementById("hoy-ocupacion").textContent = Math.round(ocup.pct) + "%";
+  document.getElementById("hoy-ocupacion-sub").textContent = `${ocup.abiertas} de ${ocup.totales} mesas ocupadas`;
+
+  // Formas de pago hoy
+  const fpContainer = document.getElementById("hoy-formas-pago");
+  const fpList = hoyData.formas_pago || [];
+  fpContainer.innerHTML = fpList.map(fp => `
+    <div style="margin-bottom:12px; display:flex; flex-direction:column; gap:4px;">
+      <div style="display:flex; justify-content:space-between; font-size:12px; font-weight:600;">
+        <span>${fp.forma_pago}</span>
+        <span style="color:var(--text3); font-weight:normal;">${fmtMoneda(fp.total)} (${fp.pct.toFixed(1)}%)</span>
+      </div>
+      <div style="background:var(--border); height:6px; border-radius:3px; overflow:hidden; width:100%;">
+        <div style="background:linear-gradient(90deg, #F5C542, #F0A500); width:${fp.pct}%; height:100%; border-radius:3px;"></div>
+      </div>
+    </div>
+  `).join("") || '<div class="empty-state">Sin transacciones hoy</div>';
+
+  renderSegmentacion(hoyData.segmentacion_turno.total);
+  renderReporteTurno("reporte-turno-hoy", hoyData.segmentacion_turno);
+
+  // Gauges
+  const actTotal = hoyData.hoy.total;
+  const projTotal = hoyData.hoy.proyeccion.total;
+  const pctTotal = projTotal > 0 ? (actTotal / projTotal) : 0;
+  
+  document.getElementById("hoy-val-facturacion").textContent = fmtMoneda(actTotal);
+  document.getElementById("hoy-pct-facturacion").textContent = Math.round(pctTotal * 100) + "%";
+  document.getElementById("hoy-prom-facturacion").textContent = `Proy: ${fmtMoneda(projTotal)}`;
+  document.getElementById("hoy-proj-facturacion").innerHTML = `A cobrar:<br>${fmtMoneda(hoyData.hoy.ocupacion.total_open)}`;
+  document.getElementById("hoy-ring-facturacion").style.strokeDashoffset = (245.04 * (1 - Math.min(1, pctTotal))).toFixed(2);
+  
+  const actCub = hoyData.hoy.cubiertos;
+  const projCub = hoyData.hoy.proyeccion.cubiertos;
+  const pctCub = projCub > 0 ? (actCub / projCub) : 0;
+  
+  document.getElementById("hoy-val-cubiertos").textContent = actCub;
+  document.getElementById("hoy-pct-cubiertos").textContent = Math.round(pctCub * 100) + "%";
+  document.getElementById("hoy-prom-cubiertos").textContent = `Proy: ${projCub}`;
+  document.getElementById("hoy-proj-cubiertos").innerHTML = `A cobrar:<br>${hoyData.hoy.ocupacion.cubiertos_open}`;
+  document.getElementById("hoy-ring-cubiertos").style.strokeDashoffset = (245.04 * (1 - Math.min(1, pctCub))).toFixed(2);
+  
+  const actOps = hoyData.hoy.comprobantes;
+  const projOps = hoyData.hoy.proyeccion.comprobantes;
+  const pctOps = projOps > 0 ? (actOps / projOps) : 0;
+  
+  document.getElementById("hoy-val-operaciones").textContent = actOps;
+  document.getElementById("hoy-pct-operaciones").textContent = Math.round(pctOps * 100) + "%";
+  document.getElementById("hoy-proj-operaciones").textContent = `Proy: ${projOps}`;
+  document.getElementById("hoy-abiertas-operaciones").innerHTML = `Abiertas:<br>${hoyData.hoy.ocupacion.abiertas} mesas`;
+  document.getElementById("hoy-ring-operaciones").style.strokeDashoffset = (245.04 * (1 - Math.min(1, pctOps))).toFixed(2);
+
+  const tbody = document.getElementById("tabla-ultimos-dias");
+  tbody.innerHTML = dias.dias.slice().reverse().map(d => {
+    let vsHtml = '';
+    if (d.total_sp > 0) {
+      const p = ((d.total - d.total_sp) / d.total_sp) * 100;
+      const isPos = p >= 0;
+      vsHtml = `<div style="font-size: 11px; font-weight: 700; color: ${isPos ? 'var(--text)' : '#fff'}; background: ${isPos ? 'rgba(16,185,129,0.2)' : 'rgba(239,68,68,0.2)'}; padding: 2px 6px; border-radius: 4px; display: inline-flex; align-items: center; gap: 2px;"><span style="color: ${isPos ? '#10b981' : '#ef4444'}">${isPos ? '▲' : '▼'}</span>${Math.abs(p).toFixed(1)}%</div>`;
+    } else {
+      vsHtml = `<span style="color:var(--text3); font-size: 11px;">-</span>`;
+    }
+
+    return `
+    <tr>
+      <td class="${d.en_vivo ? 'dia-hoy' : ''}">${d.en_vivo ? '<span class="live-dot"></span>' : ''}${fmtFechaArg(d.fecha)}</td>
+      <td style="font-weight: 600;">${fmtMoneda(d.total)}</td>
+      <td>${vsHtml}</td>
+      <td>${d.comprobantes}</td>
+      <td>${fmtMoneda(d.comprobantes > 0 ? d.total / d.comprobantes : 0)}</td>
+    </tr>
+  `}).join("");
+}
+
+// ── VENTAS: períodos ──
+function addDays(dateStr, days) {
+  const [y, m, d] = dateStr.split("-").map(Number);
+  const dt = new Date(Date.UTC(y, m - 1, d));
+  dt.setUTCDate(dt.getUTCDate() + days);
+  return dt.toISOString().slice(0, 10);
+}
+function startOfWeek(dateStr) {
+  const [y, m, d] = dateStr.split("-").map(Number);
+  const dt = new Date(Date.UTC(y, m - 1, d));
+  const dow = dt.getUTCDay();
+  const diff = dow === 0 ? -6 : 1 - dow;
+  dt.setUTCDate(dt.getUTCDate() + diff);
+  return dt.toISOString().slice(0, 10);
+}
+function startOfMonth(dateStr) { return dateStr.slice(0, 7) + "-01"; }
+function endOfMonth(dateStr) {
+  const [y, m] = dateStr.split("-").map(Number);
+  return new Date(Date.UTC(y, m, 0)).toISOString().slice(0, 10);
+}
+function addMonths(dateStr, months) {
+  const [y, m, d] = dateStr.split("-").map(Number);
+  const dt = new Date(Date.UTC(y, m - 1 + months, 1));
+  const lastDay = new Date(Date.UTC(dt.getUTCFullYear(), dt.getUTCMonth() + 1, 0)).getUTCDate();
+  dt.setUTCDate(Math.min(d, lastDay));
+  return dt.toISOString().slice(0, 10);
+}
+function shiftYear(dateStr, years) {
+  const [y, m, d] = dateStr.split("-").map(Number);
+  return `${y + years}-${String(m).padStart(2, "0")}-${String(d).padStart(2, "0")}`;
+}
+
+let granularidad = "semana";
+let offset = 0;
+let modoComparacion = "anterior";
+let rangoActual = null;
+let labelsActual = { actual: "", comparado: "" };
+
+function periodoOffset(gran, off) {
+  const hoy = HOY_ARG;
+  if (gran === "dia") {
+    const f = addDays(hoy, off);
+    const label = off === 0 ? "Hoy" : off === -1 ? "Ayer" : fmtCorta(f);
+    return { desde: f, hasta: f, label };
+  }
+  if (gran === "semana") {
+    const hasta = addDays(hoy, off * 7);
+    const desde = addDays(hasta, -6);
+    const label = off === 0 ? "Últimos 7 días" : off === -1 ? "7 días anteriores" : `${fmtCorta(desde)} al ${fmtCorta(hasta)}`;
+    return { desde, hasta, label };
+  }
+  if (gran === "mes") {
+    const inicio = addMonths(startOfMonth(hoy), off);
+    const hasta = off === 0 ? hoy : endOfMonth(inicio);
+    const [y, m] = inicio.split("-").map(Number);
+    return { desde: inicio, hasta, label: `${MESES[m - 1]} ${y}` };
+  }
+  const anioBase = Number(hoy.slice(0, 4)) + off;
+  const inicio = `${anioBase}-01-01`;
+  const hasta = off === 0 ? hoy : `${anioBase}-12-31`;
+  return { desde: inicio, hasta, label: String(anioBase) };
+}
+
+function diffDias(desde, hasta) {
+  const [y1, m1, d1] = desde.split("-").map(Number);
+  const [y2, m2, d2] = hasta.split("-").map(Number);
+  return Math.round((Date.UTC(y2, m2 - 1, d2) - Date.UTC(y1, m1 - 1, d1)) / 86400000);
+}
+
+function periodoComparadoDe(actual, gran, offActual, modo) {
+  if (modo === "anio_pasado") {
+    const desde = shiftYear(actual.desde, -1);
+    const hasta = shiftYear(actual.hasta, -1);
+    let label;
+    if (gran === "mes") {
+      const [y, m] = desde.split("-").map(Number);
+      label = `${MESES[m - 1]} ${y}`;
+    } else if (gran === "anio") {
+      label = desde.slice(0, 4);
+    } else {
+      label = `${fmtCorta(desde)} (año pasado)`;
+    }
+    return { desde, hasta, label };
+  }
+  const anterior = periodoOffset(gran, offActual - 1);
+  // Si el período actual está en curso (parcial, corta hoy), el anterior se corta
+  // a la misma cantidad de días para que la comparación sea pareja (no todo el mes vs 5 días).
+  if (offActual === 0 && gran !== "dia") {
+    const diasTranscurridos = diffDias(actual.desde, actual.hasta);
+    return { ...anterior, hasta: addDays(anterior.desde, diasTranscurridos), label: `${anterior.label} (primeros ${diasTranscurridos + 1} días)` };
+  }
+  return anterior;
+}
+
+function construirRango() {
+  const actual = periodoOffset(granularidad, offset);
+  const comparado = periodoComparadoDe(actual, granularidad, offset, modoComparacion);
+  labelsActual = { actual: actual.label, comparado: comparado.label };
+  document.getElementById("periodo-nav-label").textContent = actual.label;
+  return { desde: actual.desde, hasta: actual.hasta, desde2: comparado.desde, hasta2: comparado.hasta };
+}
+
+function navegarPeriodo(delta) {
+  offset += delta;
+  cargarVentas(construirRango());
+}
+
+document.getElementById("chip-granularidad").addEventListener("click", (e) => {
+  const btn = e.target.closest(".chip");
+  if (!btn) return;
+  document.querySelectorAll("#chip-granularidad .chip").forEach(b => b.classList.remove("active"));
+  btn.classList.add("active");
+  granularidad = btn.dataset.gran;
+  offset = 0;
+  cargarVentas(construirRango());
+});
+
+document.getElementById("chip-comparacion").addEventListener("click", (e) => {
+  const btn = e.target.closest(".chip");
+  if (!btn) return;
+  document.querySelectorAll("#chip-comparacion .chip").forEach(b => b.classList.remove("active"));
+  btn.classList.add("active");
+  modoComparacion = btn.dataset.cmp;
+  document.getElementById("custom-range").style.display = modoComparacion === "custom" ? "flex" : "none";
+  if (modoComparacion !== "custom") cargarVentas(construirRango());
+});
+
+function aplicarCustom() {
+  const rango = {
+    desde: document.getElementById("custom-desde").value,
+    hasta: document.getElementById("custom-hasta").value,
+    desde2: document.getElementById("custom-desde2").value,
+    hasta2: document.getElementById("custom-hasta2").value,
+  };
+  if (!rango.desde || !rango.hasta || !rango.desde2 || !rango.hasta2) return;
+  labelsActual = { actual: "Período elegido", comparado: "Período de comparación" };
+  document.getElementById("periodo-nav-label").textContent = "Rango personalizado";
+  cargarVentas(rango);
+}
+
+async function cargarVentas(rango) {
+  rangoActual = rango;
+  const qp = new URLSearchParams(rango).toString();
+  const [resumen, serie, proyeccion, reporteTurno] = await Promise.all([
+    api("/api/ventas/resumen?" + qp),
+    api("/api/ventas/serie?desde=" + rango.desde + "&hasta=" + rango.hasta),
+    api("/api/ventas/proyeccion?mes=" + rango.hasta.slice(0, 7)),
+    api("/api/ventas/segmentacion-turno?desde=" + rango.desde + "&hasta=" + rango.hasta),
+  ]);
+  renderReporteTurno("reporte-turno-ventas", reporteTurno);
+
+  const labelActualConFechas = `${labelsActual.actual} · ${fmtCorta(rango.desde)} al ${fmtCorta(rango.hasta)}`;
+  const labelComparadoConFechas = `${labelsActual.comparado} · ${fmtCorta(rango.desde2)} al ${fmtCorta(rango.hasta2)}`;
+
+  document.getElementById("vt-label-actual").textContent = labelActualConFechas;
+  document.getElementById("vt-label-comparado").textContent = labelComparadoConFechas;
+  document.getElementById("ventas-total").textContent = fmtMoneda(resumen.total.actual);
+  document.getElementById("ventas-total-comparado").textContent = fmtMoneda(resumen.total.comparado);
+  renderComparativoTag(document.getElementById("ventas-total-cmp"), resumen.total, labelsActual.comparado);
+
+  document.getElementById("ventas-comprobantes").textContent = resumen.comprobantes.actual;
+  renderMiniCmp(document.getElementById("ventas-comprobantes-cmp"), resumen.comprobantes, labelsActual.comparado);
+  document.getElementById("ventas-promedio").textContent = fmtMoneda(resumen.promedio.actual);
+  renderMiniCmp(document.getElementById("ventas-promedio-cmp"), resumen.promedio, labelsActual.comparado);
+
+  // Ocupación promedio del período
+  const ocup = resumen.ocupacion || { pct: 0, promedio_mesas: 0, total_mesas: 73 };
+  document.getElementById("ventas-ocupacion").textContent = Math.round(ocup.pct) + "%";
+  document.getElementById("ventas-ocupacion-sub").textContent = `Prom. ${ocup.promedio_mesas.toFixed(1)} de ${ocup.total_mesas} mesas/días`;
+
+  // Formas de pago del período
+  const fpVentasContainer = document.getElementById("ventas-formas-pago");
+  const fpList = resumen.formas_pago || [];
+  fpVentasContainer.innerHTML = fpList.map(fp => `
+    <div style="margin-bottom:12px; display:flex; flex-direction:column; gap:4px;">
+      <div style="display:flex; justify-content:space-between; font-size:12px; font-weight:600;">
+        <span>${fp.forma_pago}</span>
+        <span style="color:var(--text3); font-weight:normal;">${fmtMoneda(fp.total)} (${fp.pct.toFixed(1)}%)</span>
+      </div>
+      <div style="background:var(--border); height:6px; border-radius:3px; overflow:hidden; width:100%;">
+        <div style="background:linear-gradient(90deg, #F5C542, #F0A500); width:${fp.pct}%; height:100%; border-radius:3px;"></div>
+      </div>
+    </div>
+  `).join("") || '<div class="empty-state">Sin transacciones en este período</div>';
+
+  document.getElementById("proyeccion-value").textContent = fmtMoneda(proyeccion.proyeccion);
+  document.getElementById("proyeccion-sub").textContent =
+    `Acumulado ${fmtMoneda(proyeccion.acumulado)} en ${proyeccion.dias_transcurridos}/${proyeccion.dias_totales_mes} días`;
+
+  const ctx = document.getElementById("chart-ventas").getContext("2d");
+  const labels = serie.serie.map(r => fmtCortaConDia(r.fecha));
+  const data = serie.serie.map(r => r.total);
+  function movAvg(arr, n) {
+    return arr.map((_, i) => {
+      const s = Math.max(0, i - n + 1);
+      const slice = arr.slice(s, i + 1);
+      return Math.round(slice.reduce((a, b) => a + b, 0) / slice.length);
+    });
+  }
+  if (chartVentas) chartVentas.destroy();
+  chartVentas = new Chart(ctx, {
+    data: {
+      labels,
+      datasets: [
+        { type: "bar", data, backgroundColor: "rgba(245,197,66,0.55)", borderRadius: 4, order: 2 },
+        { type: "line", data: movAvg(data, 3), borderColor: "#8B5CF6", backgroundColor: "#8B5CF6", tension: 0.3, pointRadius: 2, order: 1 },
+      ],
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: {
+        x: { ticks: { color: "#98A2B8", font: { size: 10 } }, grid: { display: false } },
+        y: { ticks: { color: "#98A2B8", font: { size: 10 } }, grid: { color: "rgba(255,255,255,0.06)" } },
+      },
+    },
+  });
+}
+
+// ── TABS ──
+function mostrarTab(tab) {
+  document.querySelectorAll(".tab-btn[data-tab]").forEach(b => b.classList.toggle("active", b.dataset.tab === tab));
+  document.querySelectorAll(".section").forEach(s => s.classList.remove("active"));
+  document.getElementById("s-" + tab).classList.add("active");
+  refrescarSeccionActual(false);
+}
+
+function refrescarSeccionActual(spin) {
+  const btn = document.getElementById("btn-refresh");
+  if (spin) { btn.classList.remove("spinning"); void btn.offsetWidth; btn.classList.add("spinning"); isForceRefresh = true; }
+  
+  const activa = document.querySelector(".tab-btn.active[data-tab]").dataset.tab;
+  let promise = null;
+  
+  if (activa === "hoy") promise = cargarHoy();
+  if (activa === "salon") promise = cargarSalon();
+  if (activa === "ventas") promise = cargarVentas(rangoActual || construirRango());
+  if (activa === "cuentas") promise = cargarCuentas();
+  if (TABS_PERIODO_SIMPLE.includes(activa)) promise = cargarTab(activa);
+  
+  if (promise) {
+    promise.catch(console.error).finally(() => {
+      isForceRefresh = false;
+    });
+  } else {
+    isForceRefresh = false;
+  }
+}
+
+// ── PRODUCTOS / OCUPACIÓN / PERSONAL / DESCUENTOS / COMPRAS: período simple compartido ──
+const TABS_PERIODO_SIMPLE = ["productos", "ocupacion", "personal", "descuentos", "compras"];
+const PREFIJO_TAB = { productos: "prod", ocupacion: "ocup", personal: "pers", descuentos: "desc", compras: "compras" };
+const periodoSimpleState = {};
+
+function calcularPeriodoSimple(preset) {
+  const hoy = HOY_ARG;
+  if (preset === "hoy") return { desde: hoy, hasta: hoy };
+  if (preset === "semana") return { desde: addDays(hoy, -6), hasta: hoy };
+  return { desde: startOfMonth(hoy), hasta: hoy };
+}
+
+function periodoActualSimple(tab) {
+  if (periodoSimpleState[tab]) return periodoSimpleState[tab];
+  const p = PREFIJO_TAB[tab];
+  const activo = document.querySelector(`#${p}-periodo-chips .chip.active`);
+  return calcularPeriodoSimple(activo ? activo.dataset.p : "mes");
+}
+
+function aplicarPeriodoCustom(tab) {
+  const p = PREFIJO_TAB[tab];
+  const desde = document.getElementById(`${p}-desde`).value;
+  const hasta = document.getElementById(`${p}-hasta`).value;
+  if (!desde || !hasta) return;
+  periodoSimpleState[tab] = { desde, hasta };
+  cargarTab(tab);
+}
+
+function seleccionarMesEnTab(tab) {
+  const p = PREFIJO_TAB[tab];
+  const select = document.getElementById(`${p}-select-mes`);
+  const mesVal = select.value;
+  if (!mesVal) return;
+  const anio = HOY_ARG ? HOY_ARG.slice(0, 4) : new Date().getFullYear();
+  const desde = `${anio}-${mesVal}-01`;
+  const hasta = endOfMonth(desde);
+  document.getElementById(`${p}-desde`).value = desde;
+  document.getElementById(`${p}-hasta`).value = hasta;
+  aplicarPeriodoCustom(tab);
+}
+
+function cargarTab(tab) {
+  const fns = { productos: cargarProductos, ocupacion: cargarOcupacion, personal: cargarPersonal, descuentos: cargarDescuentos, compras: cargarCompras };
+  fns[tab]().catch(console.error);
+}
+
+TABS_PERIODO_SIMPLE.forEach((tab) => {
+  const p = PREFIJO_TAB[tab];
+  const row = document.getElementById(`${p}-periodo-chips`);
+  row.addEventListener("click", (e) => {
+    const btn = e.target.closest(".chip");
+    if (!btn) return;
+    row.querySelectorAll(".chip").forEach(b => b.classList.remove("active"));
+    btn.classList.add("active");
+    const preset = btn.dataset.p;
+    document.getElementById(`${p}-custom-range`).style.display = preset === "custom" ? "flex" : "none";
+    if (preset !== "custom") {
+      const selectMes = document.getElementById(`${p}-select-mes`);
+      if (selectMes) selectMes.value = "";
+      periodoSimpleState[tab] = calcularPeriodoSimple(preset);
+      cargarTab(tab);
+    }
+  });
+});
+
+function miniCmpHtml(cmp) {
+  if (!cmp || cmp.sentido === undefined) return "";
+  const flecha = cmp.variacion_importe > 0 ? "▲" : cmp.variacion_importe < 0 ? "▼" : "—";
+  return ` <span class="comparativo-tag ${cmp.sentido}" style="padding:2px 6px;margin-top:0;">${flecha} ${fmtPct(cmp.variacion_pct)}</span>`;
+}
+
+function rangoAnteriorEquivalente(desde, hasta) {
+  const dias = diffDias(desde, hasta);
+  return { desde2: addDays(desde, -(dias + 1)), hasta2: addDays(desde, -1) };
+}
+
+// ── PRODUCTOS ──
+let rubrosCache = null;
+let chartProductos = null;
+
+async function cargarRubrosSiHaceFalta() {
+  if (rubrosCache) return rubrosCache;
+  const data = await api("/api/productos/rubros");
+  rubrosCache = data.rubros;
+  const sel = document.getElementById("prod-rubro");
+  rubrosCache.forEach((r) => {
+    const opt = document.createElement("option");
+    opt.value = r.codigo;
+    opt.textContent = r.nombre;
+    sel.appendChild(opt);
+  });
+  return rubrosCache;
+}
+
+async function cargarProductos() {
+  await cargarRubrosSiHaceFalta();
+  const { desde, hasta } = periodoActualSimple("productos");
+  const orden = document.getElementById("prod-orden").value;
+  const limit = document.getElementById("prod-limit").value;
+  const rubro = document.getElementById("prod-rubro").value;
+
+  const qp = new URLSearchParams({ desde, hasta, orden, limit });
+  if (rubro) qp.set("cod_rua", rubro);
+
+  const [{ productos }, resumen] = await Promise.all([
+    api("/api/productos/ranking?" + qp.toString()),
+    api(`/api/ventas/resumen?desde=${desde}&hasta=${hasta}`),
+  ]);
+
+  const totalFacturado = Number(resumen.actual.total);
+
+  document.getElementById("prod-chart-title").textContent =
+    `Ranking por facturación · ${fmtFechaArg(desde)} al ${fmtFechaArg(hasta)}`;
+
+  const tbody = document.getElementById("tabla-productos");
+  tbody.innerHTML = productos.map((p, i) => {
+    const importe = Number(p.importe);
+    const pct = totalFacturado > 0 ? (importe / totalFacturado) * 100 : 0;
+    return `<tr>
+      <td>${i + 1}</td>
+      <td>${p.nombre}</td>
+      <td>${Math.round(Number(p.cantidad))}</td>
+      <td>${fmtMoneda(importe)}</td>
+      <td>${pct.toFixed(1)}%</td>
+    </tr>`;
+  }).join("") || `<tr><td colspan="5" class="empty-state">Sin datos en este período</td></tr>`;
+
+  const ctx = document.getElementById("chart-productos").getContext("2d");
+  if (chartProductos) chartProductos.destroy();
+  const colores = ["#F5C542","#8B5CF6","#10B981","#F43F5E","#38BDF8","#FB923C","#A78BFA","#34D399","#F472B6","#FBBF24","#60A5FA","#4ADE80","#F87171","#C084FC","#2DD4BF"];
+  chartProductos = new Chart(ctx, {
+    type: "doughnut",
+    data: {
+      labels: productos.map((p) => p.nombre),
+      datasets: [{ data: productos.map((p) => Number(p.importe)), backgroundColor: colores, borderWidth: 0 }],
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { position: "bottom", labels: { color: "#98A2B8", font: { size: 10 }, boxWidth: 10 } } },
+    },
+  });
+}
+
+// ── OCUPACIÓN ──
+const DIAS_SEMANA_MYSQL = ["Domingo", "Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado"];
+
+function renderHeatmap(heatmap) {
+  const horas = [11,12,13,14,15,16,17,18,19,20,21,22,23,0,1,2];
+  const maxVal = Math.max(1, ...heatmap.map((c) => c.comandas));
+  const mapa = {};
+  heatmap.forEach((c) => { mapa[`${c.dia_semana}-${c.hora}`] = c.comandas; });
+
+  let html = '<table class="heatmap-table"><thead><tr><th></th>';
+  horas.forEach((h) => { html += `<th>${h}h</th>`; });
+  html += "</tr></thead><tbody>";
+
+  for (let dia = 1; dia <= 7; dia++) {
+    html += `<tr><td>${DIAS_SEMANA_MYSQL[dia - 1]}</td>`;
+    horas.forEach((h) => {
+      const val = mapa[`${dia}-${h}`] || 0;
+      const intensidad = val / maxVal;
+      const bg = `rgba(245,197,66,${(0.08 + intensidad * 0.85).toFixed(2)})`;
+      const color = intensidad > 0.45 ? '#0B0F19' : 'var(--text2)';
+      const weight = intensidad > 0.45 ? '700' : 'normal';
+      html += `<td style="background:${bg}; color:${color}; font-weight:${weight}">${val || ""}</td>`;
+    });
+    html += "</tr>";
+  }
+  html += "</tbody></table>";
+  document.getElementById("heatmap-grid").innerHTML = html;
+}
+
+async function cargarOcupacion() {
+  const { desde, hasta } = periodoActualSimple("ocupacion");
+  const [{ heatmap }, { dias }] = await Promise.all([
+    api(`/api/ocupacion/heatmap?desde=${desde}&hasta=${hasta}`),
+    api(`/api/ocupacion/mesas?desde=${desde}&hasta=${hasta}`),
+  ]);
+
+  renderHeatmap(heatmap);
+
+  const tbody = document.getElementById("tabla-mesas");
+  tbody.innerHTML = dias.map((d) => `
+    <tr>
+      <td>${fmtFechaArg(d.fecha)}</td>
+      <td>${d.mesas_usadas}</td>
+      <td>${d.comprobantes}</td>
+      <td>${d.duracion_prom_min ? Math.round(d.duracion_prom_min) + " min" : "—"}</td>
+    </tr>
+  `).join("") || `<tr><td colspan="4" class="empty-state">Sin datos en este período</td></tr>`;
+}
+
+// ── PERSONAL ──
+async function cargarPersonal() {
+  const { desde, hasta } = periodoActualSimple("personal");
+  const comparar = document.getElementById("pers-comparar").checked;
+  let qp = `desde=${desde}&hasta=${hasta}`;
+  if (comparar) {
+    const { desde2, hasta2 } = rangoAnteriorEquivalente(desde, hasta);
+    qp += `&desde2=${desde2}&hasta2=${hasta2}`;
+  }
+  const { personal } = await api("/api/personal/ranking?" + qp);
+  const tbody = document.getElementById("tabla-personal");
+  tbody.innerHTML = personal.map((p, i) => {
+    if (comparar) {
+      return `<tr><td>${i + 1}</td><td>${p.nombre}</td><td>${fmtMoneda(p.ventas.actual)}${miniCmpHtml(p.ventas)}</td><td>${p.comprobantes.actual}</td></tr>`;
+    }
+    return `<tr><td>${i + 1}</td><td>${p.nombre}</td><td>${fmtMoneda(p.ventas)}</td><td>${p.comprobantes}</td></tr>`;
+  }).join("") || `<tr><td colspan="4" class="empty-state">Sin datos en este período</td></tr>`;
+}
+
+// ── DESCUENTOS ──
+async function cargarDescuentos() {
+  const { desde, hasta } = periodoActualSimple("descuentos");
+  const comparar = document.getElementById("desc-comparar").checked;
+  let qp = `desde=${desde}&hasta=${hasta}`;
+  if (comparar) {
+    const { desde2, hasta2 } = rangoAnteriorEquivalente(desde, hasta);
+    qp += `&desde2=${desde2}&hasta2=${hasta2}`;
+  }
+  const [resumen, { motivos }] = await Promise.all([
+    api("/api/descuentos/resumen?" + qp),
+    api(`/api/descuentos/por-motivo?desde=${desde}&hasta=${hasta}`),
+  ]);
+
+  if (comparar) {
+    document.getElementById("desc-total").textContent = fmtMoneda(resumen.total_dto.actual);
+    renderComparativoTag(document.getElementById("desc-total-cmp"), resumen.total_dto, "período anterior");
+    document.getElementById("desc-pct").textContent = resumen.pct_sobre_ventas.actual.toFixed(1) + "%";
+    renderComparativoTag(document.getElementById("desc-pct-cmp"), resumen.pct_sobre_ventas, "período anterior");
+  } else {
+    document.getElementById("desc-total").textContent = fmtMoneda(resumen.actual.total_dto);
+    document.getElementById("desc-total-cmp").innerHTML = "";
+    document.getElementById("desc-pct").textContent = resumen.actual.pct_sobre_ventas.toFixed(1) + "%";
+    document.getElementById("desc-pct-cmp").innerHTML = "";
+  }
+
+  const tbody = document.getElementById("tabla-descuentos");
+  tbody.innerHTML = motivos.map((m) => `
+    <tr><td>${m.nombre} (${m.tipo === "%" ? "%" : "$"})</td><td>${fmtMoneda(m.importe)}</td><td>${m.comprobantes}</td></tr>
+  `).join("") || `<tr><td colspan="3" class="empty-state">Sin descuentos en este período</td></tr>`;
+}
+
+// ── COMPRAS ──
+async function cargarCompras() {
+  const { desde, hasta } = periodoActualSimple("compras");
+  const [{ proveedores }, deudasData] = await Promise.all([
+    api(`/api/compras/proveedores?desde=${desde}&hasta=${hasta}`),
+    api("/api/compras/deudas"),
+  ]);
+
+  const tbodyProv = document.getElementById("tabla-proveedores");
+  tbodyProv.innerHTML = proveedores.map((p) => `
+    <tr><td>${p.nombre}</td><td>${fmtMoneda(p.total)}</td></tr>
+  `).join("") || `<tr><td colspan="2" class="empty-state">Sin compras en este período</td></tr>`;
+
+  const tbodyDeuda = document.getElementById("tabla-deudas");
+  const conDeuda = deudasData.proveedores.filter((p) => p.deuda > 1000).sort((a, b) => b.deuda - a.deuda);
+  tbodyDeuda.innerHTML = conDeuda.map((p) => `
+    <tr><td>${p.nombre}</td><td>${fmtMoneda(p.total_comprado)}</td><td>${fmtMoneda(p.total_pagado)}</td><td>${fmtMoneda(p.deuda)}</td></tr>
+  `).join("") || `<tr><td colspan="4" class="empty-state">Sin deudas pendientes</td></tr>`;
+}
+
+async function iniciarApp() {
+  cargarHistorialChatPersistente();
+  await cargarHoy();
+  if (autoRefreshTimer) clearInterval(autoRefreshTimer);
+  autoRefreshTimer = setInterval(() => {
+    if (document.querySelector(".tab-btn.active[data-tab]").dataset.tab === "hoy") cargarHoy().catch(console.error);
+  }, 10 * 60 * 1000);
+}
+
+// ── CHAT IA ──
+let historialChat = [];
+
+function guardarHistorialChat() {
+  localStorage.setItem("barideal_chat_history", JSON.stringify(historialChat));
+}
+
+function cargarHistorialChatPersistente() {
+  try {
+    const guardado = localStorage.getItem("barideal_chat_history");
+    const cont = document.getElementById("chat-mensajes");
+    cont.innerHTML = "";
+    
+    if (guardado) {
+      historialChat = JSON.parse(guardado);
+      if (historialChat.length === 0) {
+        agregarMensajeChat("bot", "Preguntame lo que quieras sobre el negocio — ventas, productos, mesas, empleados, proveedores, lo que sea. Reviso la base en el momento para responderte.");
+      } else {
+        historialChat.forEach(msg => {
+          agregarMensajeChat(msg.role === "user" ? "user" : "bot", msg.content);
+        });
+      }
+    } else {
+      agregarMensajeChat("bot", "Preguntame lo que quieras sobre el negocio — ventas, productos, mesas, empleados, proveedores, lo que sea. Reviso la base en el momento para responderte.");
+    }
+  } catch (e) {
+    console.error("Error al cargar historial de chat:", e);
+  }
+}
+
+function limpiarHistorialChat() {
+  if (confirm("¿Estás seguro de que querés vaciar el historial del chat?")) {
+    historialChat = [];
+    localStorage.removeItem("barideal_chat_history");
+    const cont = document.getElementById("chat-mensajes");
+    cont.innerHTML = "";
+    agregarMensajeChat("bot", "Preguntame lo que quieras sobre el negocio — ventas, productos, mesas, empleados, proveedores, lo que sea. Reviso la base en el momento para responderte.");
+  }
+}
+
+function formatoBasicoMarkdown(texto) {
+  let charts = [];
+  const escapado = texto.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+  
+  let textoProcesado = escapado.replace(/```chart\n([\s\S]*?)```/g, (match, jsonString) => {
+    try {
+      const jsonDecodificado = jsonString.replace(/&amp;/g, "&").replace(/&lt;/g, "<").replace(/&gt;/g, ">");
+      const config = JSON.parse(jsonDecodificado);
+      const id = "chart-" + Math.random().toString(36).substr(2, 9);
+      charts.push({ id, config });
+      return `\n\n<div class="chat-chart-container" style="position:relative; width:100%; height:300px; margin:15px 0;"><canvas id="${id}"></canvas></div>\n\n`;
+    } catch (e) {
+      return "\n\n<p><em>Error al renderizar el gráfico.</em></p>\n\n";
+    }
+  });
+
+  const lineas = textoProcesado.split("\n");
+  let html = "";
+  let filasTabla = [];
+
+  function cerrarTabla() {
+    if (filasTabla.length === 0) return;
+    const [encabezado, , ...resto] = filasTabla;
+    const celdas = (fila) => fila.split("|").map(c => c.trim()).filter(c => c !== "");
+    html += "<table><thead><tr>" + celdas(encabezado).map(c => `<th>${c}</th>`).join("") + "</tr></thead><tbody>";
+    for (const fila of resto) {
+      html += "<tr>" + celdas(fila).map(c => `<td>${c}</td>`).join("") + "</tr>";
+    }
+    html += "</tbody></table>";
+    filasTabla = [];
+  }
+
+  for (const linea of lineas) {
+    if (/^\s*\|.*\|\s*$/.test(linea)) {
+      filasTabla.push(linea);
+      continue;
+    }
+    cerrarTabla();
+    if (linea.includes("<div class=\"chat-chart-container\"")) {
+      html += linea;
+      continue;
+    }
+    const conNegrita = linea.replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>");
+    const sinTitulo = conNegrita.replace(/^#{1,3}\s+/, "");
+    html += sinTitulo + "<br/>";
+  }
+  cerrarTabla();
+  return { html, charts };
+}
+
+function agregarMensajeChat(rol, texto, clases = "") {
+  const cont = document.getElementById("chat-mensajes");
+  const div = document.createElement("div");
+  div.className = `chat-msg ${rol === "user" ? "chat-msg-user" : "chat-msg-bot"} ${clases}`;
+  
+  if (rol === "user") {
+    div.innerHTML = texto.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+  } else {
+    const result = formatoBasicoMarkdown(texto);
+    div.innerHTML = result.html;
+    if (result.charts && result.charts.length > 0) {
+      setTimeout(() => {
+        result.charts.forEach(c => {
+          const config = c.config;
+          config.options = config.options || {};
+          config.options.maintainAspectRatio = false;
+          config.options.color = "#F1F4FA"; 
+          config.options.plugins = config.options.plugins || {};
+          config.options.plugins.legend = config.options.plugins.legend || { labels: { color: "#F1F4FA" } };
+          if (config.type === "bar" || config.type === "line") {
+            config.options.scales = config.options.scales || {};
+            config.options.scales.x = config.options.scales.x || { ticks: { color: "#98A2B8" }, grid: { color: "rgba(255,255,255,0.05)" } };
+            config.options.scales.y = config.options.scales.y || { ticks: { color: "#98A2B8" }, grid: { color: "rgba(255,255,255,0.05)" } };
+          }
+          if (config.type === "pie" || config.type === "doughnut") {
+            config.options.plugins.legend.position = "right";
+          }
+          new Chart(document.getElementById(c.id), config);
+        });
+      }, 0);
+    }
+  }
+  
+  cont.appendChild(div);
+  cont.scrollTop = cont.scrollHeight;
+  return div;
+}
+
+async function enviarMensajeChat() {
+  const input = document.getElementById("chat-input");
+  const mensaje = input.value.trim();
+  if (!mensaje) return;
+  input.value = "";
+  document.getElementById("chat-send-btn").disabled = true;
+
+  agregarMensajeChat("user", mensaje);
+  const pensando = agregarMensajeChat("bot", "Consultando la base…", "pensando");
+
+  try {
+    const data = await api("/api/chat", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ mensaje, historial: historialChat }),
+    });
+    pensando.remove();
+    agregarMensajeChat("bot", data.respuesta);
+    historialChat.push({ role: "user", content: mensaje });
+    historialChat.push({ role: "assistant", content: data.respuesta });
+    guardarHistorialChat();
+  } catch (e) {
+    pensando.remove();
+    agregarMensajeChat("bot", "Uh, no pude consultar la base. Probá de nuevo en un rato.");
+  } finally {
+    document.getElementById("chat-send-btn").disabled = false;
+  }
+}
+
+// ── SALÓN ──
+window.verTicketsMesa = async function(mesa) {
+  const dateInput = document.getElementById("salon-date");
+  const fechaStr = dateInput && dateInput.value ? dateInput.value : '';
+  const url = `/api/envivo/mesas/tickets?mesa=${encodeURIComponent(mesa)}${fechaStr ? '&fecha=' + fechaStr : ''}`;
+  
+  const modal = document.getElementById("modal-tickets");
+  const title = document.getElementById("modal-tickets-title");
+  const body = document.getElementById("modal-tickets-body");
+  
+  modal.style.display = 'flex';
+  title.innerText = `Tickets - Mesa ${mesa}`;
+  body.innerHTML = `<div style="text-align:center; padding:20px;">Cargando...</div>`;
+  
+  try {
+    const data = await api(url);
+    if (!data || data.length === 0) {
+      body.innerHTML = `<div style="text-align:center; padding:20px; color: var(--text3);">No hay tickets</div>`;
+      return;
+    }
+    
+    // Sort tickets (7am to 6:59am) based on opening time
+    data.sort((a, b) => {
+      let ha = parseInt((a.hora_ape || '00:00').split(':')[0], 10);
+      let hb = parseInt((b.hora_ape || '00:00').split(':')[0], 10);
+      if (ha < 7) ha += 24;
+      if (hb < 7) hb += 24;
+      if (ha !== hb) return ha - hb;
+      return (a.hora_ape || '').localeCompare(b.hora_ape || '');
+    });
+
+    let html = '';
+    let suma = 0;
+    const isHoy = !fechaStr || fechaStr === (new Date().toLocaleString("sv-SE", { timeZone: "America/Argentina/Buenos_Aires" }).slice(0,10));
+    const finalFecha = fechaStr || (new Date().toLocaleString("sv-SE", { timeZone: "America/Argentina/Buenos_Aires" }).slice(0,10));
+
+    data.forEach(t => {
+      suma += Number(t.total) || 0;
+      const rowId = `ticket-detalle-${t.id}`;
+      
+      const horaText = t.tipo_comp === 'Abierta' ? `${t.hora_ape} - En curso` : `${t.hora_ape || '-'} a ${t.hora_cierre || '-'}`;
+      
+      html += `
+        <tr class="clickable-row" style="border-bottom: 1px solid var(--border);" onclick="toggleDetalleTicket('${finalFecha}', '${t.id}', '${t.prefijo}', '${t.tipo_comp}', '${rowId}', ${t.total}, ${t.descuento || 0}, '${mesa}')">
+          <td style="color:var(--text2); padding: 12px 16px;">
+            <div style="font-size: 14px; display:flex; align-items:center; gap:8px;">
+              ${horaText}
+              ${t.tipo_comp === 'Abierta' ? '<span style="background: rgba(16,185,129,0.2); color:#10b981; padding:2px 6px; border-radius:4px; font-size:10px; font-weight:700;">EN CURSO</span>' : ''}
+            </div>
+            ${t.mozo ? `<div style="font-size: 11px; color: var(--text3); margin-top: 4px;">👤 ${t.mozo}</div>` : ''}
+          </td>
+          <td class="right" style="color:var(--text1); font-weight:800; padding: 12px 16px;">${fmtMoneda(t.total)}</td>
+        </tr>
+        <tr id="${rowId}" style="display:none; background: rgba(0,0,0,0.2);">
+          <td colspan="2" style="padding: 0;">
+            <div id="${rowId}-content" style="padding: 12px 16px; border-bottom: 1px solid var(--border);">
+              Cargando detalle...
+            </div>
+          </td>
+        </tr>
+      `;
+    });
+    html += `
+        <tr style="background: var(--bg2);">
+          <td style="color:var(--text1); font-weight:800; padding: 12px 16px; text-align:right;">TOTAL:</td>
+          <td class="right" style="color:#6ee7b7; font-weight:900; padding: 12px 16px;">${fmtMoneda(suma)}</td>
+        </tr>
+    `;
+    body.innerHTML = `
+      <table style="width:100%; border-collapse:collapse; margin-top:10px;">
+        <thead>
+          <tr>
+            <th style="text-align:left; padding:8px 16px; color:var(--text3); font-size:12px; border-bottom:1px solid var(--border);">Hora</th>
+            <th style="text-align:right; padding:8px 16px; color:var(--text3); font-size:12px; border-bottom:1px solid var(--border);">Importe</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${html}
+        </tbody>
+      </table>
+    `;
+  } catch (err) {
+    body.innerHTML = `<tr><td colspan="3" style="text-align:center; color: var(--red);">Error al cargar tickets</td></tr>`;
+  }
+}
+
+window.toggleDetalleTicket = async function(fecha, numero, prefijo, cod_cpb, rowId, total, descuento, mesa) {
+  const row = document.getElementById(rowId);
+  if (!row) return;
+
+  if (row.style.display !== 'none') {
+    row.style.display = 'none';
+    return;
+  }
+
+  row.style.display = 'table-row';
+  const content = document.getElementById(`${rowId}-content`);
+  
+  if (content.dataset.loaded === "true") return;
+
+  try {
+    const data = await api(`/api/envivo/mesas/tickets/detalle?fecha=${fecha}&numero=${numero}&prefijo=${prefijo}&cod_cpb=${cod_cpb}&mesa=${encodeURIComponent(mesa)}`);
+    if (!data || data.length === 0) {
+      content.innerHTML = `<div style="color:var(--text3); font-size: 11px; text-align:center;">No hay productos detallados</div>`;
+      content.dataset.loaded = "true";
+      return;
+    }
+
+    let itemsHtml = data.map(i => `
+      <div style="display:flex; justify-content:space-between; font-size:12px; margin-bottom:4px;">
+        <div style="color:var(--text2);"><span style="color:var(--text3); margin-right:8px;">${i.cantidad}x</span> ${i.producto}</div>
+        <div style="color:var(--text2);">${fmtMoneda(i.total)}</div>
+      </div>
+    `).join('');
+    
+    // Add subtotal, discount, and total
+    const subtotal = total + descuento;
+    itemsHtml += `
+      <div style="border-top: 1px dashed var(--border); margin-top: 8px; padding-top: 8px;">
+        <div style="display:flex; justify-content:space-between; font-size:12px; margin-bottom:4px; color:var(--text3);">
+          <div>Subtotal</div>
+          <div>${fmtMoneda(subtotal)}</div>
+        </div>
+        ${descuento > 0 ? `
+        <div style="display:flex; justify-content:space-between; font-size:12px; margin-bottom:4px; color:var(--red);">
+          <div>Descuento</div>
+          <div>-${fmtMoneda(descuento)}</div>
+        </div>
+        ` : ''}
+        <div style="display:flex; justify-content:space-between; font-size:12px; font-weight:800; margin-top:4px; color:var(--text1);">
+          <div>Total Ticket</div>
+          <div>${fmtMoneda(total)}</div>
+        </div>
+      </div>
+    `;
+
+    content.innerHTML = itemsHtml;
+    content.dataset.loaded = "true";
+  } catch (e) {
+    content.innerHTML = `<div style="color:var(--red); font-size: 11px; text-align:center;">Error al cargar detalle</div>`;
+  }
+}
+
+async function cargarSalon() {
+  const mapContainer = document.getElementById("salon-map-container");
+  const tabla = document.getElementById("salon-tabla-abiertas");
+  const dateInput = document.getElementById("salon-date");
+  const fechaStr = dateInput && dateInput.value ? dateInput.value : '';
+  
+  if (mapContainer.innerHTML.trim() === "" || mapContainer.innerHTML.includes("<!-- Map")) {
+    mapContainer.innerHTML = '<div style="padding: 20px; color: var(--text3); text-align: center;">Cargando plano...</div>';
+  }
+
+  try {
+    const url = fechaStr ? `/api/envivo/mesas?fecha=${fechaStr}` : `/api/envivo/mesas`;
+    const response = await api(url);
+    const dataMesas = response.mesas || [];
+    const dataCerradas = response.cerradas || [];
+    const isHistorico = response.isHistorico;
+    
+    let totalDia = 0;
+    dataCerradas.forEach(c => totalDia += Number(c.total));
+
+    const titleAbiertas = document.getElementById("title-abiertas");
+    const cardCerradas = document.getElementById("card-cerradas");
+
+    if (isHistorico) {
+      document.getElementById("salon-date-label").innerHTML = `(${fechaStr}) - <span style="background:var(--bg2); padding:4px 10px; border-radius:12px; color:#6ee7b7; font-size:14px; box-shadow: 0 2px 4px rgba(0,0,0,0.5);">Total: ${fmtMoneda(totalDia)}</span>`;
+      titleAbiertas.innerText = "Detalle Mesas (Facturación del Día)";
+      cardCerradas.style.display = "none";
+    } else {
+      document.getElementById("salon-date-label").innerText = "en Vivo";
+      titleAbiertas.innerText = "Detalle Mesas Ocupadas";
+      cardCerradas.style.display = "block";
+    }
+
+    const S = 1.25;
+
+    // Fondo base con decoraciones estáticas
+    let mapHtml = `
+      <!-- BARRA -->
+      <div style="position: absolute; left: ${10*S}px; top: ${10*S}px; width: ${50*S}px; height: ${350*S}px; background: rgba(31,41,55,0.7); border: 1px solid #374151; border-radius: 8px; display:flex; align-items:center; justify-content:center; box-shadow: 0 4px 10px rgba(0,0,0,0.5);">
+        <div style="writing-mode: vertical-lr; transform: rotate(180deg); color: #9ca3af; font-weight:800; font-size:14px; letter-spacing: 6px;">BARRA</div>
+      </div>
+      <!-- CALLE PINTO (Fondo de asfalto) -->
+      <div style="position: absolute; left: 0; top: ${580*S}px; width: ${580*S}px; height: ${50*S}px; background: #1f2937; display:flex; align-items:center; justify-content:center; border-top: 2px solid #374151; z-index:0;">
+        <div style="width: 100%; height: 2px; border-top: 2px dashed #4b5563; position: absolute; top: 24px;"></div>
+        <div style="color: #9ca3af; font-weight:800; font-size:14px; letter-spacing:4px; background: #1f2937; padding: 0 16px; z-index:1;">CALLE PINTO</div>
+      </div>
+      <!-- CALLE RODRIGUEZ (Fondo de asfalto) -->
+      <div style="position: absolute; left: ${530*S}px; top: 0; width: ${50*S}px; height: ${630*S}px; background: #1f2937; display:flex; align-items:center; justify-content:center; border-left: 2px solid #374151; border-right: 2px solid #374151; z-index:0;">
+        <div style="width: 2px; height: 100%; border-left: 2px dashed #4b5563; position: absolute; left: 24px;"></div>
+        <div style="writing-mode: vertical-rl; transform: rotate(180deg); color: #9ca3af; font-weight:800; font-size:12px; letter-spacing:4px; background: #1f2937; padding: 16px 0; z-index:1;">CALLE RODRIGUEZ</div>
+      </div>
+      <!-- INTERSECCIÓN (Tapa las líneas de borde) -->
+      <div style="position: absolute; left: ${532*S}px; top: ${582*S}px; width: ${46*S}px; height: ${48*S}px; background: #1f2937; z-index:0;"></div>
+      <!-- INGRESO (Ochava) -->
+      <div style="position: absolute; left: ${512*S}px; top: ${562*S}px; width: ${36*S}px; height: ${16*S}px; background: #f59e0b; transform: rotate(-45deg); display:flex; align-items:center; justify-content:center; box-shadow: 0 0 10px rgba(245,158,11,0.6); z-index:2; border-radius: 2px;">
+        <div style="color: #fff; font-weight:800; font-size:6px; letter-spacing: 1px;">INGRESO</div>
+      </div>
+    `;
+
+    // Solo tomamos mesas de plano 1 y ordenamos las ocupadas
+    const mesasPlano1 = dataMesas.filter(d => d.plano === "1");
+    const ocupadas = mesasPlano1.filter(d => d.ocupada && d.is_mesa).sort((a,b) => b.total - a.total);
+    
+    // Para heatmap
+    let maxFacturado = 1;
+    if (isHistorico) {
+      maxFacturado = ocupadas.length > 0 ? ocupadas[0].total : 1;
+    }
+
+    const formatK = (val) => {
+      if (val >= 1000) return (val / 1000).toFixed(1) + 'k';
+      return val;
+    };
+
+    mesasPlano1.forEach(m => {
+      // Solo dibujamos mesas propiamente dichas o que tengan tamaño válido
+      if (!m.is_mesa || m.w === 0 || m.h === 0) return;
+      
+      let bgColor = "rgba(16, 185, 129, 0.2)";
+      let borderColor = "#10b981";
+      let shadowColor = "rgba(16, 185, 129, 0.2)";
+      let innerHtml = "";
+      let scale = 1;
+      
+      if (isHistorico) {
+        if (m.total > 0) {
+          // Heatmap color logic (intensity based on total / maxFacturado)
+          const ratio = Math.min(1, m.total / maxFacturado);
+          // HSL: from yellow-orange (45) to deep red (0)
+          const hue = 45 - (ratio * 45); 
+          bgColor = `hsla(${hue}, 90%, 40%, 0.6)`;
+          borderColor = `hsl(${hue}, 90%, 50%)`;
+          shadowColor = bgColor;
+          innerHtml = `<div style="font-size:12px; font-weight:800; color:#fff; text-shadow: 0 1px 2px rgba(0,0,0,0.8);">${m.mesa}</div>
+                       <div style="font-size:10px; font-weight:800; color:#fef08a; margin-top:2px; text-shadow: 0 1px 2px rgba(0,0,0,0.8);">$${formatK(m.total)}</div>`;
+        } else {
+          innerHtml = `<div style="font-size:13px; font-weight:800; color:#6ee7b7; text-shadow: 0 1px 2px rgba(0,0,0,0.8);">${m.mesa}</div>`;
+        }
+      } else {
+        if (m.ocupada) {
+          bgColor = "rgba(239, 68, 68, 0.25)";
+          borderColor = "#ef4444";
+          shadowColor = "rgba(239, 68, 68, 0.3)";
+          innerHtml = `<div style="font-size:12px; font-weight:800; color:#fff; text-shadow: 0 1px 2px rgba(0,0,0,0.8);">${m.mesa}</div>
+                       <div style="font-size:10px; font-weight:800; color:#fca5a5; margin-top:2px; text-shadow: 0 1px 2px rgba(0,0,0,0.8);">$${formatK(m.total)}</div>`;
+        } else {
+          innerHtml = `<div style="font-size:13px; font-weight:800; color:#6ee7b7; text-shadow: 0 1px 2px rgba(0,0,0,0.8);">${m.mesa}</div>`;
+        }
+      }
+
+      let offsetX = 0;
+      let mesaName = m.mesa.trim();
+      // Si es serie 100 o 500 (y no 10A etc), sumamos offset para moverlas a la derecha de la calle Rodriguez
+      if (/^(1\d{2}|5\d{2})/.test(mesaName)) {
+        offsetX = 70;
+      }
+      
+      // Mantenemos el tamaño original multiplicado por el factor de escala, y box-sizing border-box evita solapamiento de bordes
+      const newW = m.w * S;
+      const newH = m.h * S;
+
+      // Utilizamos las coordenadas x e y escaladas
+      mapHtml += `<div onclick="verTicketsMesa('${mesaName}')" style="position:absolute; left:${(m.x + offsetX) * S}px; top:${m.y * S}px; width:${newW}px; height:${newH}px; 
+                  background:${bgColor}; border: 2px solid ${borderColor}; border-radius: 6px; box-sizing: border-box;
+                  display:flex; flex-direction:column; align-items:center; justify-content:center; 
+                  text-align:center; overflow:hidden; line-height:1.1; cursor:pointer;
+                  box-shadow: 0 4px 10px ${shadowColor}; backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px); transition: all 0.3s ease; z-index:10;">
+        ${innerHtml}
+      </div>`;
+    });
+
+    mapContainer.innerHTML = mapHtml;
+
+    if (ocupadas.length === 0) {
+      document.getElementById("salon-tabla-abiertas").innerHTML = `<tr><td colspan="3" style="text-align:center; color: var(--text3);">No hay mesas ${isHistorico ? 'con facturación' : 'ocupadas'}</td></tr>`;
+    } else {
+      document.getElementById("salon-tabla-abiertas").innerHTML = ocupadas.map(m => `
+        <tr style="border-bottom: 1px solid var(--border);" onclick="verTicketsMesa('${m.mesa}')" style="cursor:pointer">
+          <td style="font-weight:800; color:#fff; padding: 12px 16px; cursor:pointer;">Mesa ${m.mesa}</td>
+          <td style="color:var(--text2); padding: 12px 16px; font-weight: 500; cursor:pointer;">${isHistorico ? (m.tickets + ' tickets') : (m.hora_ape || '-')}</td>
+          <td class="right" style="color:#fca5a5; font-weight:800; padding: 12px 16px; cursor:pointer;">${fmtMoneda(m.total)}</td>
+        </tr>
+      `).join('');
+    }
+
+    if (dataCerradas.length === 0) {
+      document.getElementById("salon-tabla-cerradas").innerHTML = `<tr><td colspan="2" style="text-align:center; color: var(--text3);">No hay facturación aún</td></tr>`;
+    } else {
+      document.getElementById("salon-tabla-cerradas").innerHTML = dataCerradas.map(c => `
+        <tr style="border-bottom: 1px solid var(--border);" onclick="verTicketsMesa('${c.mesa}')" style="cursor:pointer">
+          <td style="font-weight:800; color:var(--text1); padding: 12px 16px; cursor:pointer;">Mesa ${c.mesa}</td>
+          <td class="right" style="color:#6ee7b7; font-weight:800; padding: 12px 16px; cursor:pointer;">${fmtMoneda(c.total)}</td>
+        </tr>
+      `).join('');
+    }
+  } catch (err) {
+    console.error("Error al cargar Salón:", err);
+    mapContainer.innerHTML = '<div style="padding:20px; color:var(--red); text-align:center;">Error al cargar plano</div>';
+    document.getElementById("salon-tabla-abiertas").innerHTML = '<tr><td colspan="3" style="text-align:center; color:var(--red);">Error al cargar mesas</td></tr>';
+  }
+}
+
+document.getElementById("chat-input").addEventListener("keydown", (e) => {
+  if (e.key === "Enter") enviarMensajeChat();
+});
+
+// ── CUENTAS CORRIENTES ──
+let saldosCuentas = [];
+
+async function cargarCuentas() {
+  const container = document.getElementById("tabla-cuentas-resto");
+  const mainContainer = document.getElementById("grid-cuentas-principales");
+  const totalCalleEl = document.getElementById("cuentas-total-calle");
+  
+  container.innerHTML = '<tr><td colspan="5" class="empty-state">Cargando…</td></tr>';
+  mainContainer.innerHTML = '<div class="empty-state" style="grid-column: 1/-1; text-align: center;">Cargando…</div>';
+  
+  try {
+    const data = await api("/api/cuentas/saldos");
+    saldosCuentas = data.saldos || [];
+    
+    const totalCalle = saldosCuentas.reduce((acc, c) => acc + (c.saldo > 0 ? c.saldo : 0), 0);
+    totalCalleEl.textContent = fmtMoneda(totalCalle);
+    
+    const saldosMap = new Map(saldosCuentas.map(s => [s.codigo, s]));
+    const principalData = [
+      { codigo: 1, label: "Gabriel Marcasso" },
+      { codigo: 2, label: "Franco Cabrera" },
+      { codigo: 3, label: "David Marcasso (Cta 3)" },
+      { codigo: 8, label: "David Marcasso (Cta 8)" },
+      { codigo: 4, label: "Pedro Sanchez" },
+      { codigo: 5, label: "Sandra Maqueira" },
+      { codigo: 6, label: "Sergio Givonetti" }
+    ];
+    
+    let mainHtml = "";
+    principalData.forEach(p => {
+      const sd = saldosMap.get(p.codigo) || { codigo: p.codigo, nombre: p.label, compras: 0, pagos: 0, saldo: 0 };
+      mainHtml += `
+        <div class="kpi-card" style="cursor:pointer; transition: transform 0.2s; border-color: ${sd.saldo > 0 ? 'rgba(245,197,66,0.3)' : 'var(--border)'}; display: flex; flex-direction: column; justify-content: space-between;" onclick="cargarHistorialCliente(${p.codigo}, '${p.label}')" onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform='none'">
+          <div>
+            <div class="kpi-label" style="font-size:12px; font-weight:700;">${p.label}</div>
+            <div class="kpi-value" style="font-size:22px; color: ${sd.saldo > 0 ? 'var(--gold)' : 'var(--text)'}; margin: 8px 0;">${fmtMoneda(sd.saldo)}</div>
+          </div>
+          <div style="font-size: 11px; color: var(--text3); display: flex; justify-content: space-between; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 8px; margin-top: 4px;">
+            <span>Consumos: ${fmtMoneda(sd.compras)}</span>
+            <span>Pagos: ${fmtMoneda(sd.pagos)}</span>
+          </div>
+        </div>
+      `;
+    });
+    mainContainer.innerHTML = mainHtml;
+    
+    renderRestoCuentas();
+  } catch (e) {
+    console.error(e);
+    container.innerHTML = '<tr><td colspan="5" class="empty-state">Error al cargar cuentas corrientes.</td></tr>';
+    mainContainer.innerHTML = '<div class="empty-state" style="grid-column: 1/-1; text-align: center;">Error al cargar cuentas corrientes.</div>';
+  }
+}
+
+function renderRestoCuentas() {
+  const container = document.getElementById("tabla-cuentas-resto");
+  const busqueda = document.getElementById("busqueda-cuentas").value.toLowerCase();
+  const principalCodes = [1, 2, 3, 8, 4, 5, 6];
+  
+  let resto = saldosCuentas.filter(c => !principalCodes.includes(c.codigo));
+  
+  if (busqueda) {
+    resto = resto.filter(c => 
+      c.nombre.toLowerCase().includes(busqueda) || 
+      String(c.codigo).includes(busqueda)
+    );
+  }
+  
+  if (resto.length === 0) {
+    container.innerHTML = '<tr><td colspan="5" class="empty-state">No se encontraron cuentas corrientes.</td></tr>';
+    return;
+  }
+  
+  let html = "";
+  resto.forEach(c => {
+    html += `
+      <tr style="cursor:pointer;" onclick="cargarHistorialCliente(${c.codigo}, '${c.nombre}')">
+        <td>${c.codigo}</td>
+        <td style="font-weight: 500;">${c.nombre}</td>
+        <td>${fmtMoneda(c.compras)}</td>
+        <td>${fmtMoneda(c.pagos)}</td>
+        <td style="font-weight:700; color: ${c.saldo > 0 ? 'var(--gold)' : 'var(--text)'};">${fmtMoneda(c.saldo)}</td>
+      </tr>
+    `;
+  });
+  container.innerHTML = html;
+}
+
+function filtrarRestoCuentas() {
+  renderRestoCuentas();
+}
+
+async function cargarHistorialCliente(codigo, nombre) {
+  document.getElementById("modal-cliente-nombre").textContent = `Historial: ${nombre}`;
+  document.getElementById("modal-kpi-consumos").textContent = "—";
+  document.getElementById("modal-kpi-pagos").textContent = "—";
+  document.getElementById("modal-kpi-saldo").textContent = "—";
+  
+  const tbody = document.getElementById("tabla-modal-historial");
+  tbody.innerHTML = '<tr><td colspan="5" class="empty-state">Cargando movimientos…</td></tr>';
+  
+  document.getElementById("modal-historial").style.display = "flex";
+  
+  try {
+    const clientData = saldosCuentas.find(s => s.codigo === codigo) || { compras: 0, pagos: 0, saldo: 0 };
+    document.getElementById("modal-kpi-consumos").textContent = fmtMoneda(clientData.compras);
+    document.getElementById("modal-kpi-pagos").textContent = fmtMoneda(clientData.pagos);
+    document.getElementById("modal-kpi-saldo").textContent = fmtMoneda(clientData.saldo);
+    
+    const res = await api(`/api/cuentas/detalle?codigo=${codigo}`);
+    const history = res.history || [];
+    
+    if (history.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="5" class="empty-state">No se registraron movimientos.</td></tr>';
+      return;
+    }
+    
+    let html = "";
+    history.forEach(h => {
+      const fechaStr = fmtFechaArg(h.fecha.slice(0, 10));
+      const esCompra = h.tipo_mov === 'compra';
+      
+      let docStr = esCompra ? `${h.cod_cpb} ${h.numero}` : `Recibo ${h.numero}`;
+      let detStr = esCompra ? "Consumo a crédito" : `Deuda saldada en ${h.pago === '*' ? 'Efectivo' : h.pago === '/' ? 'CTA CTE' : h.pago === 'M' ? 'Crédito' : h.pago === 'E' ? 'Débito' : h.pago === 'N' ? 'QR' : h.pago === 'P' ? 'MercadoPago' : h.pago}`;
+      
+      html += `
+        <tr>
+          <td>${fechaStr}</td>
+          <td>
+            <span style="padding: 2px 6px; font-size: 10px; font-weight:700; border-radius:4px; display:inline-block; text-align:center; min-width: 60px; ${esCompra ? 'background: rgba(239, 68, 68, 0.15); color: #ef4444;' : 'background: rgba(16, 185, 129, 0.15); color: #10b981;'}">
+              ${esCompra ? 'CONSUMO' : 'PAGO'}
+            </span>
+          </td>
+          <td>${docStr}</td>
+          <td style="color: var(--text3); font-size: 11px;">${detStr}</td>
+          <td style="text-align:right; font-weight:700; color: ${esCompra ? 'var(--malo)' : 'var(--bueno)'}">
+            ${esCompra ? '+' : '-'}${fmtMoneda(h.importe)}
+          </td>
+        </tr>
+      `;
+    });
+    tbody.innerHTML = html;
+  } catch (e) {
+    console.error(e);
+    tbody.innerHTML = '<tr><td colspan="5" class="empty-state">Error al cargar historial.</td></tr>';
+  }
+}
+
+function cerrarModalHistorial() {
+  document.getElementById("modal-historial").style.display = "none";
+}
+
+// Close modal if clicked outside content
+window.addEventListener("click", (e) => {
+  const modal = document.getElementById("modal-historial");
+  if (e.target === modal) {
+    cerrarModalHistorial();
+  }
+  const modalTickets = document.getElementById("modal-tickets");
+  if (e.target === modalTickets) {
+    modalTickets.style.display = "none";
+  }
+});
+
+// Calculate comparativo utility
+function calculateComparativo(actual, anterior) {
+  if (!anterior) return { pct: 100, up: true, diff: actual };
+  const diff = actual - anterior;
+  return {
+    variacion_pct: (Math.abs(diff) / anterior) * 100,
+    variacion_importe: diff,
+    sentido: diff > 0 ? "bueno" : diff < 0 ? "malo" : "neutral",
+    up: diff >= 0,
+    diff: diff
+  };
+}
+
+iniciarApp().catch(console.error);
+</script>
+
+<div id="modal-tickets" style="display:none; position:fixed; z-index:9999; left:0; top:0; width:100%; height:100%; overflow:auto; background-color:rgba(0,0,0,0.7);">
+  <div style="background-color:var(--bg0); margin: 10% auto; padding:20px; border:1px solid var(--border); border-radius:12px; width:90%; max-width:500px; box-shadow:0 10px 30px rgba(0,0,0,0.5);">
+    <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid var(--border); padding-bottom:10px; margin-bottom:15px;">
+      <h3 id="modal-tickets-title" style="margin:0; color:var(--text); font-size:18px;">Tickets - Mesa</h3>
+      <span onclick="document.getElementById('modal-tickets').style.display='none'" style="color:var(--text3); font-size:24px; font-weight:bold; cursor:pointer;">&times;</span>
+    </div>
+    <div id="modal-tickets-body" style="color:var(--text2);">
+      Cargando...
+    </div>
+  </div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+<script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/es.js"></script>
+<script>
+function initRango(fpId, desdeId, hastaId) {
+  if(!document.getElementById(fpId)) return;
+  flatpickr("#" + fpId, {
+    mode: "range",
+    dateFormat: "Y-m-d",
+    altInput: true,
+    altFormat: "d/m/Y",
+    locale: "es",
+    onChange: function(selectedDates) {
+      if (selectedDates.length === 2) {
+        document.getElementById(desdeId).value = flatpickr.formatDate(selectedDates[0], "Y-m-d");
+        document.getElementById(hastaId).value = flatpickr.formatDate(selectedDates[1], "Y-m-d");
+      } else {
+        document.getElementById(desdeId).value = "";
+        document.getElementById(hastaId).value = "";
+      }
+    }
+  });
+}
+document.addEventListener("DOMContentLoaded", () => {
+  initRango("fp-custom1", "custom-desde", "custom-hasta");
+  initRango("fp-custom2", "custom-desde2", "custom-hasta2");
+  initRango("fp-prod", "prod-desde", "prod-hasta");
+  initRango("fp-ocup", "ocup-desde", "ocup-hasta");
+  initRango("fp-pers", "pers-desde", "pers-hasta");
+  initRango("fp-desc", "desc-desde", "desc-hasta");
+  initRango("fp-compras", "compras-desde", "compras-hasta");
+  
+  if(document.getElementById("fp-salon")) {
+    flatpickr("#fp-salon", {
+      dateFormat: "Y-m-d",
+      altInput: true,
+      altFormat: "d/m/Y",
+      locale: "es",
+      defaultDate: "today",
+      onChange: function(selectedDates) {
+        if(selectedDates.length > 0) {
+          document.getElementById("salon-date").value = flatpickr.formatDate(selectedDates[0], "Y-m-d");
+        }
+      }
+    });
+  }
+});
+</script>
+</body>
+</html>

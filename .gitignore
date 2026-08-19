@@ -1,0 +1,7 @@
+node_modules/
+.env
+docs/raw-dump.json
+.vercel/
+docs/HANDOFF.md
+.vercel
+.env*
