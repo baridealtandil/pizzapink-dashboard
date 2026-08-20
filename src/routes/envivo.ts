@@ -3,7 +3,7 @@ import { query } from "../db";
 import { cachedLive, cachedRange } from "../cache";
 import { comparativo } from "../utils/comparativo";
 import { nowArg, todayArg, addDays, minutosDesdeApertura, sqlMinutosDesdeApertura } from "../utils/dates";
-import { FAC_UNION, ITE_UNION, COD_ART_SERVICIO_MESA } from "../repo/sql";
+import { FAC_UNION, ITE_UNION } from "../repo/sql";
 import { segmentacionPorTurno } from "../repo/segmentacion";
 
 export const envivo = new Hono();
@@ -30,36 +30,11 @@ async function totalDia(fecha: string, minutosCorte?: number) {
   );
   const r = rows[0];
 
-  // Fetch comensales (servicio de mesa)
-  let condicionHoraItems = "";
-  let paramsItems: unknown[] = [];
-  if (minutosCorte !== undefined) {
-    condicionHoraItems = `AND ${sqlMinutosDesdeApertura("f.hora_sal")} <= ?`;
-    paramsItems = [fecha, COD_ART_SERVICIO_MESA, minutosCorte, fecha, COD_ART_SERVICIO_MESA, minutosCorte];
-  } else {
-    paramsItems = [fecha, COD_ART_SERVICIO_MESA, fecha, COD_ART_SERVICIO_MESA];
-  }
-
-  const rowsComensales = await query<{ comensales: number | null }>(
-    `SELECT SUM(comensales) as comensales FROM (
-      SELECT i.cantidad as comensales
-      FROM mxite i
-      JOIN mxfac f ON i.cod_cpb = f.cod_cpb AND i.prefijo = f.prefijo AND i.numero = f.numero AND i.fecha = f.fecha
-      WHERE i.fecha = ? AND i.cod_art = ? ${condicionHoraItems}
-      UNION ALL
-      SELECT i.cantidad as comensales
-      FROM mxtuite i
-      JOIN mxtufac f ON i.cod_cpb = f.cod_cpb AND i.prefijo = f.prefijo AND i.numero = f.numero AND i.fecha = f.fecha
-      WHERE i.fecha = ? AND i.cod_art = ? ${condicionHoraItems}
-    ) t`,
-    paramsItems
-  );
-
   return {
     total: Number(r.total ?? 0),
     comprobantes: Number(r.comprobantes ?? 0),
     cubiertos: Number(r.cubiertos ?? 0),
-    comensales: Number(rowsComensales[0]?.comensales ?? 0),
+    comensales: 0,
   };
 }
 
@@ -383,7 +358,9 @@ envivo.get("/ultimos-dias", async (c) => {
   }
 
   const hoyData = await cachedLive(`envivo:hoy-fila:${hoyStr}`, () => totalDia(hoyStr), refresh);
-  const hoySpData = await cachedRange(`envivo:hoy-sp:${hoyStr}`, addDays(hoyStr, -1), () => totalDia(addDays(hoyStr, -7), hoyData.hora_corte), refresh);
+  const { time: horaActual } = nowArg();
+  const minutosCorte = minutosDesdeApertura(horaActual);
+  const hoySpData = await cachedRange(`envivo:hoy-sp:${hoyStr}`, addDays(hoyStr, -1), () => totalDia(addDays(hoyStr, -7), minutosCorte), refresh);
 
   return c.json({
     dias: [...diasProcesados, { fecha: hoyStr, total: hoyData.total, comprobantes: hoyData.comprobantes, total_sp: hoySpData.total, en_vivo: true }],
