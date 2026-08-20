@@ -5,6 +5,7 @@
   "packageManager": "bun@1.1.20",
   "type": "module",
   "scripts": {
+    "build": "bun build src/vercel.ts --outfile api/index.js --target node",
     "dev": "bun --watch src/index.ts",
     "start": "bun src/index.ts"
   },
