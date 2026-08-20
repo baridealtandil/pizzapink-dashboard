@@ -1,8 +1,14 @@
 {
+  "framework": null,
+  "outputDirectory": "public",
   "rewrites": [
     {
       "source": "/api/(.*)",
-      "destination": "/api/index.js"
+      "destination": "https://pizzapink-dashboard-production.up.railway.app/api/$1"
+    },
+    {
+      "source": "/(.*)",
+      "destination": "/$1"
     }
   ]
 }
