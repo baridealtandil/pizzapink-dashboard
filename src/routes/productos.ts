@@ -2,10 +2,10 @@ import { Hono } from "hono";
 import { query } from "../db";
 import { cachedRange } from "../cache";
 import { parseRango } from "../utils/periods";
-import { ITE_UNION, CM2_UNION, COD_ART_SERVICIO_MESA } from "../repo/sql";
+import { ITE_UNION, CM2_UNION } from "../repo/sql";
 
-// 251 = "Cubiertos", 252 = "Servicio de mesa": cargos de mesa, no productos del menú.
-const CODIGOS_NO_PRODUCTO = [251, COD_ART_SERVICIO_MESA];
+// 251 = "Cubiertos": cargos de mesa, no productos del menú.
+const CODIGOS_NO_PRODUCTO = [251];
 
 export const productos = new Hono();
 
