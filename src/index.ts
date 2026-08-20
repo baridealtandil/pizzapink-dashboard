@@ -11,7 +11,7 @@ import { ocupacion } from "./routes/ocupacion";
 import { chat } from "./routes/chat";
 import { cuentas } from "./routes/cuentas";
 
-const app = new Hono();
+export const app = new Hono();
 
 app.use("*", cors());
 
